@@ -19,7 +19,7 @@
 <div class="space-y-6">
 
     <!-- Search & Filter Section -->
-  \<form method="GET" action="{{ route('warkah.index') }}" class="bg-white rounded-lg shadow-md p-4 sm:p-6">
+  <form method="GET" action="{{ route('warkah.index') }}" class="bg-white rounded-lg shadow-md p-4 sm:p-6">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Search Input -->
         <div class="lg:col-span-2">
@@ -82,66 +82,79 @@
             </a>
         </div>
     </form>
-
+ {{-- <thead class="bg-blue-600 text-white"> --}}
     <!-- Table Section -->
-    <div class="hidden md:block bg-white rounded-lg shadow-md overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-blue-50 border-b border-gray-200">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                            <i class="fa-solid fa-calendar mr-1"></i> Kurun Waktu
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                            <i class="fa-solid fa-tag mr-1"></i> Kode Klasifikasi
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                            <i class="fa-solid fa-map-pin mr-1"></i> Ruang Penyimpanan/Rak
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                            <i class="fa-solid fa-note-sticky mr-1"></i> Uraian Informasi Arsip
-                        </th>
-                        <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                            <i class="fa-solid fa-cog mr-1"></i> Aksi
-                        </th>
+   <div class="hidden md:block bg-white rounded-lg shadow-md overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="min-w-full table-auto border-separate border-spacing-y-1">
+            <thead class="bg-blue-50 border-b border-gray-200">
+                <tr>
+                    <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">No</th>
+                    <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
+                        <i class="fa-solid fa-calendar mr-1"></i> Kurun Waktu
+                    </th>
+                    <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
+                        <i class="fa-solid fa-tag mr-1"></i> Kode Klasifikasi
+                    </th>
+                    <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
+                        <i class="fa-solid fa-map-pin mr-1"></i> Ruang Penyimpanan / Rak
+                    </th>
+                    <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
+                        <i class="fa-solid fa-note-sticky mr-1"></i> Uraian Informasi Arsip
+                    </th>
+                    <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
+                        <i class="fa-solid fa-cog mr-1"></i> Aksi
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="text-gray-800">
+                @forelse ($warkah as $index => $item)
+                    <tr class="bg-white hover:bg-blue-50 transition">
+                        <td class="text-center text-sm font-medium px-4 py-3 align-middle">
+                            {{ ($warkah->currentPage() - 1) * $warkah->perPage() + $loop->iteration }}
+                        </td>
+                        <td class="text-center text-sm px-4 py-3 align-middle">
+                            {{ $item->kurun_waktu_berkas ?? '-' }}
+                        </td>
+                        <td class="text-center text-sm px-4 py-3 align-middle">
+                            {{ $item->kode_klasifikasi ?? '-' }}
+                        </td>
+                        <td class="text-center text-sm px-4 py-3 align-middle">
+                            {{ $item->ruang_penyimpanan_rak ?? '-' }}
+                        </td>
+                       <td class="px-6 py-4 text-sm text-gray-600 truncate max-w-xs" title="{{ $item->uraian_informasi_arsip }}">
+                        {{ Str::limit($item->uraian_informasi_arsip, 60) ?: '-' }}
+                    </td>
+
+                        <td class="text-center px-4 py-3 align-middle">
+                            <div class="flex justify-center gap-2">
+                                <a href="{{ route('warkah.show', $item->id) }}" 
+                                   class="p-2 rounded-full text-blue-600 hover:bg-blue-100 transition"
+                                   title="Lihat Detail">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                                <a href="{{ route('warkah.edit', $item->id) }}" 
+                                   class="p-2 rounded-full text-green-600 hover:bg-green-100 transition"
+                                   title="Edit">
+                                    <i class="fa-solid fa-pencil"></i>
+                                </a>
+                            </div>
+                        </td>
                     </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    @forelse ($warkah as $item)
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="px-6 py-4 text-sm text-gray-900">{{ $item->kurun_waktu_berkas ?? '-' }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-900">{{ $item->kode_klasifikasi ?? '-' }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-900">{{ $item->ruang_penyimpanan_rak ?? '-' }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600">{{ Str::limit($item->uraian_informasi_arsip, 60) ?: '-' }}</td>
-                            <td class="px-6 py-4 text-center">
-                                <div class="flex justify-center gap-2">
-                                    <a href="{{ route('warkah.show', $item->id) }}" 
-                                       class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                                       title="Lihat Detail">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </a>
-                                    <a href="{{ route('warkah.edit', $item->id) }}" 
-                                       class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition"
-                                       title="Edit">
-                                        <i class="fa-solid fa-pencil"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="px-6 py-8 text-center">
-                                <div class="flex flex-col items-center justify-center">
-                                    <i class="fa-solid fa-inbox text-4xl text-gray-300 mb-3"></i>
-                                    <p class="text-gray-500 font-medium">Tidak ada data arsip</p>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                @empty
+                    <tr>
+                        <td colspan="6" class="text-center py-8">
+                            <div class="flex flex-col items-center justify-center">
+                                <i class="fa-solid fa-inbox text-4xl text-gray-300 mb-3"></i>
+                                <p class="text-gray-500 font-medium">Tidak ada data arsip</p>
+                            </div>
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
     </div>
+</div>
 
     <!-- Card Section (Mobile) -->
     <div class="md:hidden space-y-4">

@@ -157,7 +157,7 @@
                     <i class="fa-solid fa-box mr-1"></i> Jumlah
                 </label>
                 <div class="bg-gray-50 px-4 py-3 rounded-lg">
-                    <p class="text-gray-900 font-medium text-lg">{{ $warkah->jumlah }} item</p>
+                    <p class="text-gray-900 font-medium text-lg">{{ $warkah->jumlah }}</p>
                 </div>
             </div>
 

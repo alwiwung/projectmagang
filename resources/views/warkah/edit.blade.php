@@ -75,12 +75,8 @@
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Tingkat Perkembangan</label>
-                <select name="tingkat_perkembangan"
-                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400 bg-white">
-                    <option value="">-- Pilih --</option>
-                    <option value="Asli" {{ old('tingkat_perkembangan', $warkah->tingkat_perkembangan) == 'Asli' ? 'selected' : '' }}>Asli</option>
-                    <option value="Copy" {{ old('tingkat_perkembangan', $warkah->tingkat_perkembangan) == 'Copy' ? 'selected' : '' }}>Copy</option>
-                </select>
+                <input type="text" name="tingkat_perkembangan" value="{{ old('tingkat_perkembangan', $warkah->tingkat_perkembangan) }}"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400" />
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">No. Boks Definitif</label>
