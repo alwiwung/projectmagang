@@ -1,43 +1,47 @@
 <?php
-// File: app/Models/Warkah.php
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\User;
 
 class Warkah extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $table = 'master_warkah';
+
     protected $fillable = [
-        'no_warkah',
-        'tahun',
-        'no_sk',
-        'nama',
+        'kurun_waktu_berkas',
         'lokasi',
         'kode_klasifikasi',
         'jenis_arsip_vital',
+        'nomor_item_arsip',
         'uraian_informasi_arsip',
+        'media',
         'jumlah',
+        'jangka_simpan_aktif',
+        'jangka_simpan_inaktif',
         'tingkat_perkembangan',
         'ruang_penyimpanan_rak',
         'no_boks_definitif',
         'no_folder',
-        'keterangan',
         'metode_perlindungan',
+        'keterangan',
         'status',
+        'created_by',
+        'updated_by',
+        'deleted_by',
+        'is_deleted',
     ];
 
-    protected $casts = [
-        'tahun' => 'integer',
-        'jumlah' => 'integer',
-        'is_deleted' => 'boolean',
-    ];
-
-    // Relasi dengan User
+    /**
+     * =============================
+     * Relasi ke tabel users
+     * =============================
+     */
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -53,42 +57,41 @@ class Warkah extends Model
         return $this->belongsTo(User::class, 'deleted_by');
     }
 
-    // Generate Nomor Warkah otomatis
-    public static function generateNoWarkah()
-    {
-        $tahun = date('Y');
-        $latestNo = self::where('tahun', $tahun)
-            ->orderBy('id', 'DESC')
-            ->first();
-
-        $number = $latestNo ? (int)substr($latestNo->no_warkah, -4) + 1 : 1;
-        return 'WRK-' . $tahun . '-' . str_pad($number, 4, '0', STR_PAD_LEFT);
-    }
-
-    // Scope untuk pencarian
+    /**
+     * =============================
+     * Scope pencarian bebas
+     * =============================
+     */
     public function scopeSearch($query, $keyword)
     {
-        return $query->where('nama', 'LIKE', "%{$keyword}%")
-            ->orWhere('no_sk', 'LIKE', "%{$keyword}%")
-            ->orWhere('no_warkah', 'LIKE', "%{$keyword}%");
+        return $query->where(function ($q) use ($keyword) {
+            $q->where('ruang_penyimpanan_rak', 'LIKE', "%{$keyword}%")
+              ->orWhere('kode_klasifikasi', 'LIKE', "%{$keyword}%")
+              ->orWhere('uraian_informasi_arsip', 'LIKE', "%{$keyword}%")
+              ->orWhere('kurun_waktu_berkas', 'LIKE', "%{$keyword}%");
+        });
     }
 
-    // Scope untuk filter
+    /**
+     * =============================
+     * Scope filter berdasarkan kolom
+     * =============================
+     */
     public function scopeFilter($query, $filters)
     {
-        if (isset($filters['tahun']) && $filters['tahun']) {
-            $query->where('tahun', $filters['tahun']);
+        if (!empty($filters['kurun_waktu_berkas'])) {
+            $query->where('kurun_waktu_berkas', $filters['kurun_waktu_berkas']);
         }
 
-        if (isset($filters['status']) && $filters['status']) {
+        if (!empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        if (isset($filters['lokasi']) && $filters['lokasi']) {
-            $query->where('lokasi', $filters['lokasi']);
+        if (!empty($filters['ruang_penyimpanan_rak'])) {
+            $query->where('ruang_penyimpanan_rak', $filters['ruang_penyimpanan_rak']);
         }
 
-        if (isset($filters['kode_klasifikasi']) && $filters['kode_klasifikasi']) {
+        if (!empty($filters['kode_klasifikasi'])) {
             $query->where('kode_klasifikasi', $filters['kode_klasifikasi']);
         }
 

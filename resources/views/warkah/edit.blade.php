@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Data Arsip')
+@section('title', 'Edit Data Arsip - Sistem Arsip Warkah')
 
 @section('content')
 <div class="max-w-6xl mx-auto px-4 py-6">
@@ -16,7 +16,7 @@
 
     @if ($errors->any())
         <div class="mb-4 p-4 bg-red-100 text-red-800 rounded-lg border border-red-300">
-            <strong>Terjadi Kesalahan</strong>
+            <strong>Terjadi Kesalahan:</strong>
             <ul class="list-disc pl-5 mt-1 text-sm">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
@@ -26,43 +26,26 @@
     @endif
 
     {{-- Form Edit --}}
-    <form action="{{ route('warkah.update', $warkah->id) }}" method="POST" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+    <form action="{{ route('warkah.update', $warkah->id) }}" method="POST"
+          class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
         @csrf
         @method('PUT')
 
-        {{-- No. Warkah (readonly) --}}
-        <div class="mb-6">
-            <label class="block text-sm font-semibold text-gray-700 mb-1"># No. Warkah</label>
-            <input type="text" name="no_warkah" value="{{ old('no_warkah', $warkah->no_warkah) }}" readonly
-                class="w-full bg-gray-100 border border-gray-300 rounded-lg px-4 py-2.5 text-gray-700" />
-            <p class="text-xs text-gray-500 mt-1">Nomor warkah tidak dapat diubah.</p>
-        </div>
-
-        {{-- Grid Utama --}}
+        {{-- Informasi Dasar --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Tahun</label>
-                <input type="text" name="tahun" value="{{ old('tahun', $warkah->tahun) }}"
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Kurun Waktu (Tahun)</label>
+                <input type="text" name="kurun_waktu_berkas" value="{{ old('kurun_waktu_berkas', $warkah->kurun_waktu_berkas) }}"
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400" />
             </div>
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">No. SK</label>
-                <input type="text" name="no_sk" value="{{ old('no_sk', $warkah->no_sk) }}"
-                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400" />
-            </div>
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Nama Arsip</label>
-                <input type="text" name="nama" value="{{ old('nama', $warkah->nama) }}"
-                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400" />
-            </div>
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Lokasi</label>
-                <input type="text" name="lokasi" value="{{ old('lokasi', $warkah->lokasi) }}"
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Ruang Penyimpanan / Rak</label>
+                <input type="text" name="ruang_penyimpanan_rak" value="{{ old('ruang_penyimpanan_rak', $warkah->ruang_penyimpanan_rak) }}"
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400" />
             </div>
         </div>
 
-        {{-- Tambahan Field Wajib --}}
+        {{-- Klasifikasi & Jenis Arsip --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Kode Klasifikasi</label>
@@ -76,33 +59,28 @@
             </div>
         </div>
 
-        {{-- Uraian --}}
+        {{-- Uraian Informasi --}}
         <div class="mt-6">
             <label class="block text-sm font-semibold text-gray-700 mb-1">Uraian Informasi Arsip</label>
             <textarea name="uraian_informasi_arsip" rows="3"
                 class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400">{{ old('uraian_informasi_arsip', $warkah->uraian_informasi_arsip) }}</textarea>
         </div>
 
-        {{-- Grid Lanjutan --}}
+        {{-- Detail Penyimpanan --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Jumlah</label>
-                <input type="number" name="jumlah" value="{{ old('jumlah', $warkah->jumlah) }}"
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Jumlah (Item)</label>
+                <input type="text" name="jumlah" value="{{ old('jumlah', $warkah->jumlah) }}"
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400" />
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Tingkat Perkembangan</label>
                 <select name="tingkat_perkembangan"
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400 bg-white">
-                    <option value="">-- Pilih Tingkat --</option>
+                    <option value="">-- Pilih --</option>
                     <option value="Asli" {{ old('tingkat_perkembangan', $warkah->tingkat_perkembangan) == 'Asli' ? 'selected' : '' }}>Asli</option>
-                    <option value="Salinan" {{ old('tingkat_perkembangan', $warkah->tingkat_perkembangan) == 'Salinan' ? 'selected' : '' }}>Salinan</option>
+                    <option value="Copy" {{ old('tingkat_perkembangan', $warkah->tingkat_perkembangan) == 'Copy' ? 'selected' : '' }}>Copy</option>
                 </select>
-            </div>
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Ruang Penyimpanan / Rak</label>
-                <input type="text" name="ruang_penyimpanan_rak" value="{{ old('ruang_penyimpanan_rak', $warkah->ruang_penyimpanan_rak) }}"
-                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400" />
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">No. Boks Definitif</label>
@@ -119,11 +97,11 @@
                 <select name="metode_perlindungan"
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400 bg-white">
                     <option value="">-- Pilih Metode --</option>
-                            <option value="Lemari Baja" {{ old('metode_perlindungan') == 'Lemari Baja' ? 'selected' : '' }}>Lemari Baja</option>
-                            <option value="Rak Stainless" {{ old('metode_perlindungan') == 'Rak Stainless' ? 'selected' : '' }}>Rak Stainless</option>
-                            <option value="Brankas" {{ old('metode_perlindungan') == 'Brankas' ? 'selected' : '' }}>Brankas</option>
-                            <option value="Ruang Ber-AC" {{ old('metode_perlindungan') == 'Ruang Ber-AC' ? 'selected' : '' }}>Ruang Ber-AC</option>
-                            <option value="Lainnya" {{ old('metode_perlindungan') == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
+                    <option value="Lemari Baja" {{ old('metode_perlindungan', $warkah->metode_perlindungan) == 'Lemari Baja' ? 'selected' : '' }}>Lemari Baja</option>
+                    <option value="Rak Stainless" {{ old('metode_perlindungan', $warkah->metode_perlindungan) == 'Rak Stainless' ? 'selected' : '' }}>Rak Stainless</option>
+                    <option value="Brankas" {{ old('metode_perlindungan', $warkah->metode_perlindungan) == 'Brankas' ? 'selected' : '' }}>Brankas</option>
+                    <option value="Ruang Ber-AC" {{ old('metode_perlindungan', $warkah->metode_perlindungan) == 'Ruang Ber-AC' ? 'selected' : '' }}>Ruang Ber-AC</option>
+                    <option value="Lainnya" {{ old('metode_perlindungan', $warkah->metode_perlindungan) == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
                 </select>
             </div>
         </div>
@@ -133,6 +111,16 @@
             <label class="block text-sm font-semibold text-gray-700 mb-1">Keterangan</label>
             <textarea name="keterangan" rows="2"
                 class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400">{{ old('keterangan', $warkah->keterangan) }}</textarea>
+        </div>
+
+        {{-- Status Arsip --}}
+        <div class="mt-6">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Status Arsip</label>
+            <select name="status"
+                class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400 bg-white">
+                <option value="Tersedia" {{ old('status', $warkah->status) == 'Tersedia' ? 'selected' : '' }}>Tersedia</option>
+                <option value="Dipinjam" {{ old('status', $warkah->status) == 'Dipinjam' ? 'selected' : '' }}>Dipinjam</option>
+            </select>
         </div>
 
         {{-- Tombol Aksi --}}

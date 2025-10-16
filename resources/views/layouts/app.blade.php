@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Sistem Arsip Warkah')</title>
 
-    <!-- Tailwind & FontAwesome -->
+    <!-- Tailwind & Alpine -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 
     <!-- Favicon -->
@@ -16,7 +19,7 @@
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen" x-data="{ mobileMenuOpen: false, darkMode: false }">
 
     <!-- 🔵 Navigation Bar -->
-    <nav class="bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md sticky top-0 z-50">
+    <nav class="bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md sticky top-0 z-50" x-data="{ mobileMenuOpen: false }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <!-- Logo -->
@@ -28,29 +31,20 @@
 
                 <!-- Desktop Menu -->
                 <div class="hidden md:flex items-center space-x-1 lg:space-x-6">
-                    <a href="{{ route('warkah.index') }}" 
-                       class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 hover:text-white transition">
-                        <i class="fa-solid fa-database mr-1"></i>
-                        <span class="hidden lg:inline">Master Data</span>
-                        <span class="lg:hidden">Data</span>
+                    <a href="{{ route('warkah.index') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
+                        <i class="fa-solid fa-database mr-1"></i> Master Data
                     </a>
-                    <a href="#" 
-                       class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 hover:text-white transition">
-                        <i class="fa-solid fa-handshake mr-1"></i>
-                        <span class="hidden lg:inline">Peminjaman</span>
-                        <span class="lg:hidden">Pinjam</span>
+                    <a href="#" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
+                        <i class="fa-solid fa-handshake mr-1"></i> Peminjaman & Pengembalian
                     </a>
-                    <a href="#" 
-                       class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 hover:text-white transition">
-                        <i class="fa-solid fa-copy mr-1"></i>
-                        <span class="hidden lg:inline">Permintaan Salinan</span>
-                        <span class="lg:hidden">Salinan</span>
+                    <a href="#" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
+                        <i class="fa-solid fa-copy mr-1"></i> Permintaan Salinan
                     </a>
                 </div>
 
-                <!-- User Info & Mobile Menu Toggle -->
-                <div class="flex items-center space-x-4">
-                    <div class="flex items-center space-x-2">
+                <!-- User & Mobile Menu Button -->
+                <div class="flex items-center space-x-3">
+                    <div class="hidden sm:flex items-center space-x-2">
                         <i class="fa-solid fa-user-circle text-lg sm:text-xl"></i>
                         <span class="text-xs sm:text-sm font-medium">Admin</span>
                     </div>
@@ -61,28 +55,48 @@
                         class="md:hidden p-2 rounded-md hover:bg-blue-700 transition"
                         aria-label="Toggle menu"
                         aria-expanded="mobileMenuOpen">
-                        <i :class="mobileMenuOpen ? 'fa-solid fa-times' : 'fa-solid fa-bars'" class="text-xl"></i>
+                        <i :class="mobileMenuOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-bars'" class="text-2xl"></i>
                     </button>
                 </div>
             </div>
+        </div>
 
-            <!-- Mobile Menu -->
-            <div x-show="mobileMenuOpen" 
-                 x-transition
-                 class="md:hidden pb-3 space-y-1">
-                <a href="{{ route('warkah.index') }}" 
-                   class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
+        <!-- 🌐 Mobile Overlay -->
+        <div 
+            class="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+            x-show="mobileMenuOpen"
+            x-transition.opacity
+            @click="mobileMenuOpen = false"
+            x-cloak>
+        </div>
+
+        <!-- 📱 Mobile Slide Menu -->
+        <div 
+            class="fixed top-0 left-0 h-full w-64 bg-blue-600 shadow-lg transform transition-transform duration-300 z-50 md:hidden"
+            :class="mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'"
+            x-cloak>
+            <div class="flex items-center justify-between px-4 py-4 border-b border-blue-500">
+                <h2 class="text-lg font-semibold">Menu</h2>
+                <button @click="mobileMenuOpen = false" class="p-2 rounded hover:bg-blue-700">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <nav class="px-4 py-3 space-y-2">
+                <a href="{{ route('warkah.index') }}" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
                     <i class="fa-solid fa-database mr-2"></i> Master Data
                 </a>
-                <a href="#" 
-                   class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
+                <a href="#" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
                     <i class="fa-solid fa-handshake mr-2"></i> Peminjaman
                 </a>
-                <a href="#" 
-                   class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
+                <a href="#" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
                     <i class="fa-solid fa-copy mr-2"></i> Permintaan Salinan
                 </a>
-            </div>
+                <div class="border-t border-blue-500 mt-3 pt-3">
+                    <a href="#" class="block px-3 py-2 text-sm hover:bg-blue-700 rounded-md transition">
+                        <i class="fa-solid fa-user-circle mr-2"></i> Admin
+                    </a>
+                </div>
+            </nav>
         </div>
     </nav>
 
@@ -130,12 +144,10 @@
     <footer class="bg-white border-t border-gray-200 mt-10">
         <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-                <!-- Tentang -->
                 <div>
                     <h3 class="font-semibold text-gray-900 mb-2">Tentang</h3>
                     <p class="text-sm text-gray-600">Sistem Arsip Warkah untuk pengelolaan dokumen dengan efisien.</p>
                 </div>
-                <!-- Link Cepat -->
                 <div>
                     <h3 class="font-semibold text-gray-900 mb-2">Link Cepat</h3>
                     <ul class="text-sm text-gray-600 space-y-1">
@@ -143,7 +155,6 @@
                         <li><a href="#" class="hover:text-blue-600 transition">Kebijakan Privasi</a></li>
                     </ul>
                 </div>
-                <!-- Kontak -->
                 <div>
                     <h3 class="font-semibold text-gray-900 mb-2">Kontak</h3>
                     <p class="text-sm text-gray-600">support@warkah.id</p>
@@ -154,7 +165,7 @@
             </div>
         </div>
     </footer>
-
+{{-- 
     <!-- 🌙 Floating Dark Mode Toggle -->
     <button 
         @click="darkMode = !darkMode; document.documentElement.classList.toggle('dark', darkMode)"
@@ -162,7 +173,7 @@
         title="Toggle Dark Mode"
         aria-label="Toggle dark mode">
         <i :class="darkMode ? 'fa-solid fa-sun' : 'fa-solid fa-moon'"></i>
-    </button>
+    </button> --}}
 
 </body>
 </html>

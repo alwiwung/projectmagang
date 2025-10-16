@@ -7,46 +7,56 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Jalankan migration.
      */
     public function up(): void
     {
         Schema::create('master_warkah', function (Blueprint $table) {
             $table->id();
-            $table->string('no_warkah')->unique();
-            $table->year('tahun');
-            $table->string('no_sk');
-            $table->string('nama');
-            $table->string('lokasi');
-            $table->string('kode_klasifikasi');
-            $table->string('jenis_arsip_vital');
-            $table->text('uraian_informasi_arsip');
-            $table->integer('jumlah');
-            $table->string('tingkat_perkembangan');
-            $table->string('ruang_penyimpanan_rak');
-            $table->string('no_boks_definitif');
-            $table->string('no_folder');
+
+            // 🗂️ Kolom utama sesuai struktur Excel
+            $table->string('kurun_waktu_berkas')->nullable(); // Tahun / periode
+            $table->string('lokasi')->nullable();
+            $table->string('kode_klasifikasi')->nullable();
+            $table->string('jenis_arsip_vital')->nullable();
+
+            // Tambahan agar sesuai Excel & import
+            $table->string('nomor_item_arsip')->nullable(); // Nomor arsip unik
+            $table->string('media')->nullable(); // Media simpan (kertas, digital, dsb)
+            $table->string('jangka_simpan_aktif')->nullable();
+            $table->string('jangka_simpan_inaktif')->nullable();
+
+            $table->text('uraian_informasi_arsip')->nullable();
+            $table->string('jumlah')->nullable(); // Bisa diubah ke integer jika hanya angka
+            $table->string('tingkat_perkembangan')->nullable();
+            $table->string('ruang_penyimpanan_rak')->nullable();
+            $table->string('no_boks_definitif')->nullable();
+            $table->string('no_folder')->nullable();
+            $table->string('metode_perlindungan')->nullable();
             $table->text('keterangan')->nullable();
-            $table->string('metode_perlindungan');
-            $table->string('status')->default('Tersedia'); // Tersedia, Dipinjam
-            $table->unsignedBigInteger('created_by')->nullable();
-            $table->unsignedBigInteger('updated_by')->nullable();
-            $table->unsignedBigInteger('deleted_by')->nullable();
-            $table->boolean('is_deleted')->default(false); // Soft delete
+
+            // Status arsip
+            $table->string('status')->default('Tersedia'); // Tersedia / Dipinjam
+
+            // Kolom soft delete manual (jika digunakan di model)
+            $table->boolean('is_deleted')->default(false);
+
+            // 🔍 Audit trail
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+
+            // 🕒 Timestamps & Soft Delete
             $table->timestamps();
             $table->softDeletes();
-            
-            $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
-            $table->foreign('updated_by')->references('id')->on('users')->onDelete('set null');
-            $table->foreign('deleted_by')->references('id')->on('users')->onDelete('set null');
         });
     }
 
     /**
-     * Reverse the migrations.
+     * Rollback migration.
      */
     public function down(): void
     {
-        Schema::dropIfExists('warkah');
+        Schema::dropIfExists('master_warkah');
     }
 };
