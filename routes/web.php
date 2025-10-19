@@ -39,5 +39,22 @@ Route::prefix('peminjaman')->name('peminjaman.')->group(function () {
     Route::post('/', [PeminjamanController::class, 'store'])->name('store');
     Route::get('/{id}', [PeminjamanController::class, 'show'])->name('show');
     Route::post('/kembalikan/{id}', [PeminjamanController::class, 'kembalikan'])->name('kembalikan');
-    Route::get('/api/available-warkah', [PeminjamanController::class, 'getAvailableWarkah'])->name('available-warkah');
 });
+
+Route::prefix('peminjaman')->name('peminjaman.')->group(function () {
+    Route::get('/', [PeminjamanController::class, 'index'])->name('index');
+    Route::post('/', [PeminjamanController::class, 'store'])->name('store');
+
+    Route::get('/{id}', [PeminjamanController::class, 'show'])->name('show');
+    Route::post('/kembalikan/{id}', [PeminjamanController::class, 'kembalikan'])->name('kembalikan');
+});
+
+// ROUTE API - LETAKKAN DI ATAS Route::resource
+// ============================================
+Route::get('peminjaman/api/available-warkah', [PeminjamanController::class, 'getAvailableWarkah'])
+    ->name('peminjaman.api.available-warkah');
+
+// Route existing peminjaman
+Route::resource('peminjaman', PeminjamanController::class);
+Route::post('peminjaman/{id}/kembalikan', [PeminjamanController::class, 'kembalikan'])
+    ->name('peminjaman.kembalikan');

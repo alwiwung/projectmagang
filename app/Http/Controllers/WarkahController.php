@@ -44,7 +44,7 @@ class WarkahController extends Controller
             ->filter(fn($tahun) => $tahun !== '')       // Buang yang kosong
             ->sort()
             ->reverse()
-            ->values();    
+            ->values();
         $lokasiList = Warkah::select('ruang_penyimpanan_rak')
             ->distinct()
             ->pluck('ruang_penyimpanan_rak')
@@ -62,7 +62,13 @@ class WarkahController extends Controller
             ->values();
 
         return view('warkah.index', compact(
-            'warkah', 'keyword', 'filters', 'tahunList', 'lokasiList', 'klasifikasiList', 'showDeleted'
+            'warkah',
+            'keyword',
+            'filters',
+            'tahunList',
+            'lokasiList',
+            'klasifikasiList',
+            'showDeleted'
         ));
     }
 
@@ -75,7 +81,7 @@ class WarkahController extends Controller
     {
         $validated = $request->validate([
             'kode_klasifikasi' => 'required|string|max:50',
-            'jenis_arsip_vital' => 'required|string|max:100',
+            'jenis_arsip_vital' => 'required|string|max:200',
             'nomor_item_arsip' => 'nullable|string|max:100',
             'uraian_informasi_arsip' => 'required|string',
             'kurun_waktu_berkas' => 'nullable|string|max:50',
@@ -115,7 +121,7 @@ class WarkahController extends Controller
     {
         $validated = $request->validate([
             'kode_klasifikasi' => 'required|string|max:50',
-            'jenis_arsip_vital' => 'required|string|max:100',
+            'jenis_arsip_vital' => 'required|string|max:200',
             'nomor_item_arsip' => 'nullable|string|max:100',
             'uraian_informasi_arsip' => 'required|string',
             'kurun_waktu_berkas' => 'nullable|string|max:50',
@@ -179,24 +185,24 @@ class WarkahController extends Controller
             return back()->with('error', '❌ Header tidak ditemukan di file Excel.');
         }
 
-       // 🔠 Normalisasi nama header
-$headers = [];
-foreach ($rows[$headerRowIndex] as $key => $val) {
-    $headers[$key] = strtolower(trim(preg_replace('/\s+/', ' ', $val ?? '')));
-}
+        // 🔠 Normalisasi nama header
+        $headers = [];
+        foreach ($rows[$headerRowIndex] as $key => $val) {
+            $headers[$key] = strtolower(trim(preg_replace('/\s+/', ' ', $val ?? '')));
+        }
 
-// 🔧 Jika ada subheader di bawah (misal "Ruang Penyimpanan / Rak" atau "No. Folder")
-$nextRow = $rows[$headerRowIndex + 1] ?? [];
-foreach ($nextRow as $key => $val) {
-    $val = strtolower(trim(preg_replace('/\s+/', ' ', $val ?? '')));
-    if ($headers[$key] === 'lokasi simpan' && $val) {
-        // Gabungkan dengan subheader, contoh: "lokasi simpan - ruang penyimpanan/rak"
-        $headers[$key] = $val;
-    } elseif (empty($headers[$key]) && $val) {
-        // Jika header kosong tapi subheader ada (kemungkinan besar "no folder")
-        $headers[$key] = $val;
-    }
-}
+        // 🔧 Jika ada subheader di bawah (misal "Ruang Penyimpanan / Rak" atau "No. Folder")
+        $nextRow = $rows[$headerRowIndex + 1] ?? [];
+        foreach ($nextRow as $key => $val) {
+            $val = strtolower(trim(preg_replace('/\s+/', ' ', $val ?? '')));
+            if ($headers[$key] === 'lokasi simpan' && $val) {
+                // Gabungkan dengan subheader, contoh: "lokasi simpan - ruang penyimpanan/rak"
+                $headers[$key] = $val;
+            } elseif (empty($headers[$key]) && $val) {
+                // Jika header kosong tapi subheader ada (kemungkinan besar "no folder")
+                $headers[$key] = $val;
+            }
+        }
 
         for ($i = $headerRowIndex + 1; $i <= count($rows); $i++) {
             $row = $rows[$i];
@@ -207,23 +213,23 @@ foreach ($nextRow as $key => $val) {
                 $data[$headerName] = trim($row[$col] ?? '');
             }
 
-   
-                        $ruang = $data['ruang penyimpanan/rak']
-                    ?? $data['ruang penyimpanan / rak']
-                    ?? $data['ruang penyimpanan/ rak'] // Tambahkan ini
-                    ?? $data['ruang penyimpanan /rak']
-                    ?? $data['ruang penyimpanan']
-                    ?? $data['lokasi simpan']
-                    ?? null;
-                            $noBoks = $data['no. boks definitif']
-                                ?? $data['no boks definitif']
-                                ?? $data['no boks']
-                                ?? null;
 
-                            $noFolder = $data['no. folder']
-                                ?? $data['no folder']
-                                ?? $data['folder']
-                                ?? null;
+            $ruang = $data['ruang penyimpanan/rak']
+                ?? $data['ruang penyimpanan / rak']
+                ?? $data['ruang penyimpanan/ rak'] // Tambahkan ini
+                ?? $data['ruang penyimpanan /rak']
+                ?? $data['ruang penyimpanan']
+                ?? $data['lokasi simpan']
+                ?? null;
+            $noBoks = $data['no. boks definitif']
+                ?? $data['no boks definitif']
+                ?? $data['no boks']
+                ?? null;
+
+            $noFolder = $data['no. folder']
+                ?? $data['no folder']
+                ?? $data['folder']
+                ?? null;
 
             Warkah::create([
                 'nomor_urut'             => $data['nomor urut'] ?? null,

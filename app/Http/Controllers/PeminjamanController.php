@@ -94,11 +94,47 @@ class PeminjamanController extends Controller
         return redirect()->back()->with('success', 'Warkah berhasil dikembalikan');
     }
 
-    // Method untuk mendapatkan list warkah yang tersedia (untuk dropdown)
-    public function getAvailableWarkah()
+    /**
+     * Get Warkah Tersedia untuk Dropdown (API)
+     */
+    public function getAvailableWarkah(Request $request)
     {
-        $warkah = Warkah::where('status', '!=', 'Dipinjam')
-            ->select('id', 'kode_klasifikasi', 'nomor_item_arsip', 'uraian_informasi_arsip')
+        $search = $request->get('search', '');
+
+        $query = Warkah::where(function ($q) {
+            // Hanya warkah yang tidak sedang dipinjam
+            $q->where('status', '!=', 'Dipinjam')
+                ->orWhereNull('status')
+                ->orWhere('status', 'Tersedia');
+        });
+
+        // Jika ada keyword pencarian
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('id', 'LIKE', "%{$search}%")
+                    ->orWhere('kode_klasifikasi', 'LIKE', "%{$search}%")
+                    ->orWhere('uraian_informasi_arsip', 'LIKE', "%{$search}%")
+                    ->orWhere('ruang_penyimpanan_rak', 'LIKE', "%{$search}%")
+                    ->orWhere('nomor_item_arsip', 'LIKE', "%{$search}%")
+                    ->orWhere('kurun_waktu_berkas', 'LIKE', "%{$search}%")
+                    ->orWhere('lokasi', 'LIKE', "%{$search}%")
+                    ->orWhere('no_boks_definitif', 'LIKE', "%{$search}%")
+                    ->orWhere('no_folder', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $warkah = $query->select(
+            'id',
+            'kode_klasifikasi',
+            'nomor_item_arsip',
+            'uraian_informasi_arsip',
+            'ruang_penyimpanan_rak',
+            'kurun_waktu_berkas',
+            'lokasi',
+            'status'
+        )
+            ->orderBy('created_at', 'desc')
+            ->limit(50) // Batasi 50 hasil untuk performa
             ->get();
 
         return response()->json($warkah);
