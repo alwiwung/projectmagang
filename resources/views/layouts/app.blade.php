@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -34,7 +35,7 @@
                     <a href="{{ route('warkah.index') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
                         <i class="fa-solid fa-database mr-1"></i> Master Data
                     </a>
-                    <a href="#" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
+                    <a href="{{ route('peminjaman.index') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
                         <i class="fa-solid fa-handshake mr-1"></i> Peminjaman & Pengembalian
                     </a>
                     <a href="#" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
@@ -50,7 +51,7 @@
                     </div>
 
                     <!-- Mobile Menu Button -->
-                    <button 
+                    <button
                         @click="mobileMenuOpen = !mobileMenuOpen"
                         class="md:hidden p-2 rounded-md hover:bg-blue-700 transition"
                         aria-label="Toggle menu"
@@ -62,7 +63,7 @@
         </div>
 
         <!-- 🌐 Mobile Overlay -->
-        <div 
+        <div
             class="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
             x-show="mobileMenuOpen"
             x-transition.opacity
@@ -71,7 +72,7 @@
         </div>
 
         <!-- 📱 Mobile Slide Menu -->
-        <div 
+        <div
             class="fixed top-0 left-0 h-full w-64 bg-blue-600 shadow-lg transform transition-transform duration-300 z-50 md:hidden"
             :class="mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'"
             x-cloak>
@@ -85,7 +86,7 @@
                 <a href="{{ route('warkah.index') }}" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
                     <i class="fa-solid fa-database mr-2"></i> Master Data
                 </a>
-                <a href="#" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
+                <a href="{{ route('peminjaman.index') }}" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
                     <i class="fa-solid fa-handshake mr-2"></i> Peminjaman
                 </a>
                 <a href="#" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
@@ -102,11 +103,11 @@
 
     <!-- 🌤️ Optional Header Section -->
     @hasSection('header')
-        <header class="bg-white shadow-sm">
-            <div class="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
-                @yield('header')
-            </div>
-        </header>
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+            @yield('header')
+        </div>
+    </header>
     @endif
 
     <!-- 📦 Main Content -->
@@ -114,26 +115,26 @@
         <div class="max-w-7xl mx-auto py-6 sm:py-10 px-4 sm:px-6 lg:px-8">
             <!-- Flash Messages -->
             @if ($errors->any())
-                <div class="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
-                    <div class="flex items-start">
-                        <i class="fa-solid fa-circle-exclamation text-red-600 mt-1 mr-3"></i>
-                        <div>
-                            <h3 class="font-semibold text-red-800">Terjadi Kesalahan</h3>
-                            <ul class="mt-2 text-sm text-red-700 space-y-1">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
+            <div class="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
+                <div class="flex items-start">
+                    <i class="fa-solid fa-circle-exclamation text-red-600 mt-1 mr-3"></i>
+                    <div>
+                        <h3 class="font-semibold text-red-800">Terjadi Kesalahan</h3>
+                        <ul class="mt-2 text-sm text-red-700 space-y-1">
+                            @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
                     </div>
                 </div>
+            </div>
             @endif
 
             @if (session('success'))
-                <div class="mb-4 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start">
-                    <i class="fa-solid fa-circle-check text-green-600 mt-1 mr-3"></i>
-                    <p class="text-green-800">{{ session('success') }}</p>
-                </div>
+            <div class="mb-4 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start">
+                <i class="fa-solid fa-circle-check text-green-600 mt-1 mr-3"></i>
+                <p class="text-green-800">{{ session('success') }}</p>
+            </div>
             @endif
 
             @yield('content')
@@ -165,7 +166,7 @@
             </div>
         </div>
     </footer>
-{{-- 
+    {{--
     <!-- 🌙 Floating Dark Mode Toggle -->
     <button 
         @click="darkMode = !darkMode; document.documentElement.classList.toggle('dark', darkMode)"
@@ -176,4 +177,5 @@
     </button> --}}
 
 </body>
+
 </html>

@@ -3,6 +3,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WarkahController;
+use App\Http\Controllers\PeminjamanController;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -20,3 +22,22 @@ Route::get('/warkah/{warkah}/edit', [WarkahController::class, 'edit'])->name('wa
 Route::put('/warkah/{warkah}', [WarkahController::class, 'update'])->name('warkah.update');
 Route::delete('/warkah/{warkah}', [WarkahController::class, 'destroy'])->name('warkah.destroy');
 Route::put('/warkah/{id}/restore', [WarkahController::class, 'restore'])->name('warkah.restore');
+
+Route::get('/', function () {
+    return redirect()->route('peminjaman.index');
+});
+
+Route::prefix('peminjaman')->name('peminjaman.')->group(function () {
+    Route::get('/', [PeminjamanController::class, 'index'])->name('index');
+    Route::get('/{id}', [PeminjamanController::class, 'show'])->name('show');
+    Route::post('/kembalikan/{id}', [PeminjamanController::class, 'kembalikan'])->name('kembalikan');
+    // Route untuk create akan ditambahkan nanti
+});
+Route::post('/', [PeminjamanController::class, 'store'])->name('store');
+Route::prefix('peminjaman')->name('peminjaman.')->group(function () {
+    Route::get('/', [PeminjamanController::class, 'index'])->name('index');
+    Route::post('/', [PeminjamanController::class, 'store'])->name('store');
+    Route::get('/{id}', [PeminjamanController::class, 'show'])->name('show');
+    Route::post('/kembalikan/{id}', [PeminjamanController::class, 'kembalikan'])->name('kembalikan');
+    Route::get('/api/available-warkah', [PeminjamanController::class, 'getAvailableWarkah'])->name('available-warkah');
+});
