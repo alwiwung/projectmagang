@@ -66,9 +66,9 @@ class Warkah extends Model
     {
         return $query->where(function ($q) use ($keyword) {
             $q->where('ruang_penyimpanan_rak', 'LIKE', "%{$keyword}%")
-              ->orWhere('kode_klasifikasi', 'LIKE', "%{$keyword}%")
-              ->orWhere('uraian_informasi_arsip', 'LIKE', "%{$keyword}%")
-              ->orWhere('kurun_waktu_berkas', 'LIKE', "%{$keyword}%");
+                ->orWhere('kode_klasifikasi', 'LIKE', "%{$keyword}%")
+                ->orWhere('uraian_informasi_arsip', 'LIKE', "%{$keyword}%")
+                ->orWhere('kurun_waktu_berkas', 'LIKE', "%{$keyword}%");
         });
     }
 
@@ -96,5 +96,25 @@ class Warkah extends Model
         }
 
         return $query;
+    }
+
+    // Relasi ke Peminjaman
+    public function peminjaman()
+    {
+        return $this->hasMany(PeminjamanWarkah::class, 'id_warkah');
+    }
+
+    // Relasi peminjaman aktif
+    public function peminjamanAktif()
+    {
+        return $this->hasOne(PeminjamanWarkah::class, 'id_warkah')
+            ->where('status', 'Dipinjam')
+            ->latest();
+    }
+
+    // Cek apakah sedang dipinjam
+    public function isDipinjam()
+    {
+        return $this->status === 'Dipinjam';
     }
 }

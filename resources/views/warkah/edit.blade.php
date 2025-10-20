@@ -25,22 +25,37 @@
         </div>
     @endif
 
+    {{-- Jika status Dipinjam, tampilkan peringatan --}}
+    @if ($warkah->status == 'Dipinjam')
+        <div class="mb-6 p-4 bg-yellow-100 border border-yellow-300 rounded-lg text-yellow-800">
+            ⚠️ Arsip ini sedang <strong>Dipinjam</strong>. Data tidak dapat diubah sampai arsip dikembalikan.
+        </div>
+    @endif
+
     {{-- Form Edit --}}
     <form action="{{ route('warkah.update', $warkah->id) }}" method="POST"
           class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
         @csrf
         @method('PUT')
 
+        {{-- Atur kondisi agar field tidak bisa diubah saat dipinjam --}}
+        @php
+            $disabled = $warkah->status == 'Dipinjam' ? 'disabled' : '';
+            $readonly = $warkah->status == 'Dipinjam' ? 'readonly' : '';
+        @endphp
+
         {{-- Informasi Dasar --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Kurun Waktu (Tahun)</label>
                 <input type="text" name="kurun_waktu_berkas" value="{{ old('kurun_waktu_berkas', $warkah->kurun_waktu_berkas) }}"
+                    {{ $readonly }}
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400" />
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Ruang Penyimpanan / Rak</label>
                 <input type="text" name="ruang_penyimpanan_rak" value="{{ old('ruang_penyimpanan_rak', $warkah->ruang_penyimpanan_rak) }}"
+                    {{ $readonly }}
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400" />
             </div>
         </div>
@@ -50,11 +65,13 @@
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Kode Klasifikasi</label>
                 <input type="text" name="kode_klasifikasi" value="{{ old('kode_klasifikasi', $warkah->kode_klasifikasi) }}"
+                    {{ $readonly }}
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400" />
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Jenis Arsip Vital</label>
                 <input type="text" name="jenis_arsip_vital" value="{{ old('jenis_arsip_vital', $warkah->jenis_arsip_vital) }}"
+                    {{ $readonly }}
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400" />
             </div>
         </div>
@@ -63,6 +80,7 @@
         <div class="mt-6">
             <label class="block text-sm font-semibold text-gray-700 mb-1">Uraian Informasi Arsip</label>
             <textarea name="uraian_informasi_arsip" rows="3"
+                {{ $readonly }}
                 class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400">{{ old('uraian_informasi_arsip', $warkah->uraian_informasi_arsip) }}</textarea>
         </div>
 
@@ -71,26 +89,31 @@
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Jumlah (Item)</label>
                 <input type="text" name="jumlah" value="{{ old('jumlah', $warkah->jumlah) }}"
+                    {{ $readonly }}
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400" />
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Tingkat Perkembangan</label>
                 <input type="text" name="tingkat_perkembangan" value="{{ old('tingkat_perkembangan', $warkah->tingkat_perkembangan) }}"
+                    {{ $readonly }}
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400" />
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">No. Boks Definitif</label>
                 <input type="text" name="no_boks_definitif" value="{{ old('no_boks_definitif', $warkah->no_boks_definitif) }}"
+                    {{ $readonly }}
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400" />
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">No. Folder</label>
                 <input type="text" name="no_folder" value="{{ old('no_folder', $warkah->no_folder) }}"
+                    {{ $readonly }}
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400" />
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Metode Perlindungan</label>
                 <select name="metode_perlindungan"
+                    {{ $disabled }}
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400 bg-white">
                     <option value="">-- Pilih Metode --</option>
                     <option value="Lemari Baja" {{ old('metode_perlindungan', $warkah->metode_perlindungan) == 'Lemari Baja' ? 'selected' : '' }}>Lemari Baja</option>
@@ -106,18 +129,22 @@
         <div class="mt-6">
             <label class="block text-sm font-semibold text-gray-700 mb-1">Keterangan</label>
             <textarea name="keterangan" rows="2"
+                {{ $readonly }}
                 class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400">{{ old('keterangan', $warkah->keterangan) }}</textarea>
         </div>
 
-        {{-- Status Arsip --}}
-        <div class="mt-6">
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Status Arsip</label>
-            <select name="status"
-                class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400 bg-white">
-                <option value="Tersedia" {{ old('status', $warkah->status) == 'Tersedia' ? 'selected' : '' }}>Tersedia</option>
-                <option value="Dipinjam" {{ old('status', $warkah->status) == 'Dipinjam' ? 'selected' : '' }}>Dipinjam</option>
-            </select>
-        </div>
+        {{-- Status Arsip (Hanya Tampilan, Tidak Bisa Diubah) --}}
+    <div class="mt-6">
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Status Arsip</label>
+        <input type="text"
+            value="{{ $warkah->status }}"
+            readonly
+            class="w-full border border-gray-300 bg-gray-100 rounded-lg px-4 py-2.5 text-gray-700 cursor-not-allowed" />
+        {{-- Simpan status dalam hidden agar tetap terkirim ke controller --}}
+        <input type="hidden" name="status" value="{{ $warkah->status }}">
+        <p class="text-xs text-gray-500 mt-1">Status arsip hanya dapat berubah melalui fitur peminjaman/pengembalian.</p>
+    </div>
+
 
         {{-- Tombol Aksi --}}
         <div class="mt-8 flex items-center justify-between">
@@ -125,10 +152,13 @@
                 class="px-5 py-2.5 rounded-lg bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition">
                 ← Batal
             </a>
-            <button type="submit"
-                class="px-6 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition">
-                💾 Perbarui Data
-            </button>
+
+            @if ($warkah->status != 'Dipinjam')
+                <button type="submit"
+                    class="px-6 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition">
+                    💾 Perbarui Data
+                </button>
+            @endif
         </div>
     </form>
 </div>

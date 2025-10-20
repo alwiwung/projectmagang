@@ -44,7 +44,7 @@ class WarkahController extends Controller
             ->filter(fn($tahun) => $tahun !== '')       // Buang yang kosong
             ->sort()
             ->reverse()
-            ->values();    
+            ->values();
         $lokasiList = Warkah::select('ruang_penyimpanan_rak')
             ->distinct()
             ->pluck('ruang_penyimpanan_rak')
@@ -62,7 +62,13 @@ class WarkahController extends Controller
             ->values();
 
         return view('warkah.index', compact(
-            'warkah', 'keyword', 'filters', 'tahunList', 'lokasiList', 'klasifikasiList', 'showDeleted'
+            'warkah',
+            'keyword',
+            'filters',
+            'tahunList',
+            'lokasiList',
+            'klasifikasiList',
+            'showDeleted'
         ));
     }
 
@@ -75,7 +81,7 @@ class WarkahController extends Controller
     {
         $validated = $request->validate([
             'kode_klasifikasi' => 'required|string|max:50',
-            'jenis_arsip_vital' => 'required|string|max:100',
+            'jenis_arsip_vital' => 'required|string|max:200',
             'nomor_item_arsip' => 'nullable|string|max:100',
             'uraian_informasi_arsip' => 'required|string',
             'kurun_waktu_berkas' => 'nullable|string|max:50',
@@ -115,7 +121,7 @@ class WarkahController extends Controller
     {
         $validated = $request->validate([
             'kode_klasifikasi' => 'required|string|max:50',
-            'jenis_arsip_vital' => 'required|string|max:100',
+            'jenis_arsip_vital' => 'required|string|max:200',
             'nomor_item_arsip' => 'nullable|string|max:100',
             'uraian_informasi_arsip' => 'required|string',
             'kurun_waktu_berkas' => 'nullable|string|max:50',
@@ -254,114 +260,139 @@ public function import(Request $request)
         'file' => 'required|mimes:xlsx,xls,csv',
     ]);
 
-    $file = $request->file('file');
-    $spreadsheet = IOFactory::load($file->getRealPath());
-    $sheet = $spreadsheet->getActiveSheet();
-    $rows = $sheet->toArray(null, true, true, true);
+    try {
+        $file = $request->file('file');
+        $spreadsheet = IOFactory::load($file->getRealPath());
+        $sheet = $spreadsheet->getActiveSheet();
+        $rows = $sheet->toArray(null, true, true, true);
 
-    // 🧭 Deteksi baris header
-    $headerRowIndex = null;
-    foreach ($rows as $i => $row) {
-        $rowText = strtolower(implode(' ', $row));
-        if (str_contains($rowText, 'kode klasifikasi') || str_contains($rowText, 'lokasi simpan')) {
-            $headerRowIndex = $i;
-            break;
-        }
-    }
-
-    if (!$headerRowIndex) {
-        return back()->with('error', '❌ Header tidak ditemukan di file Excel.');
-    }
-
-    // 🔠 Normalisasi nama header
-    $headers = [];
-    foreach ($rows[$headerRowIndex] as $key => $val) {
-        $headers[$key] = strtolower(trim(preg_replace('/\s+/', ' ', $val ?? '')));
-    }
-
-    // 🔧 Cek subheader di bawah header utama
-    $nextRow = $rows[$headerRowIndex + 1] ?? [];
-    foreach ($nextRow as $key => $val) {
-        $val = strtolower(trim(preg_replace('/\s+/', ' ', $val ?? '')));
-        if ($headers[$key] === 'lokasi simpan' && $val) {
-            $headers[$key] = $val;
-        } elseif (empty($headers[$key]) && $val) {
-            $headers[$key] = $val;
-        }
-    }
-
-    // 🧮 Hitung hasil
-    $inserted = 0;
-    $duplicates = 0;
-
-    // 🔁 Loop isi data
-    for ($i = $headerRowIndex + 1; $i <= count($rows); $i++) {
-        $row = $rows[$i];
-        if (!array_filter($row)) continue;
-
-        $data = [];
-        foreach ($headers as $col => $headerName) {
-            $data[$headerName] = trim($row[$col] ?? '');
+        // 🧭 Deteksi baris header
+        $headerRowIndex = null;
+        foreach ($rows as $i => $row) {
+            $rowText = strtolower(implode(' ', $row));
+            if (str_contains($rowText, 'kode klasifikasi') || str_contains($rowText, 'lokasi simpan')) {
+                $headerRowIndex = $i;
+                break;
+            }
         }
 
-        // 🧩 Gabung variasi nama kolom
-         $ruang = $data['ruang penyimpanan/rak']
-                    ?? $data['ruang penyimpanan / rak']
-                    ?? $data['ruang penyimpanan/ rak'] // Tambahkan ini
-                    ?? $data['ruang penyimpanan /rak']
-                    ?? $data['ruang penyimpanan rak']
-                    ?? $data['lokasi simpan']
-                    ?? null;
-
-        $noBoks = $data['no. boks definitif']
-            ?? $data['no boks definitif']
-            ?? $data['no boks']
-            ?? null;
-
-        $noFolder = $data['no. folder']
-            ?? $data['no folder']
-            ?? $data['folder']
-            ?? null;
-
-        // ⚠️ Cegah data duplikat (misalnya berdasarkan kode klasifikasi + uraian)
-        $exists = Warkah::where('kode_klasifikasi', $data['kode klasifikasi'] ?? null)
-            ->where('uraian_informasi_arsip', $data['uraian informasi arsip'] ?? null)
-            ->exists();
-
-        if ($exists) {
-            $duplicates++;
-            continue;
+        if (!$headerRowIndex) {
+            return back()->withErrors([
+                'file' => '❌ Header tidak ditemukan di file Excel. Pastikan ada kolom seperti "Kode Klasifikasi" dan "Lokasi Simpan".'
+            ]);
         }
 
-        // 🟢 Simpan data baru
-        Warkah::create([
-            'nomor_urut'             => $data['nomor urut'] ?? null,
-            'kode_klasifikasi'       => $data['kode klasifikasi'] ?? null,
-            'jenis_arsip_vital'      => $data['jenis arsip vital'] ?? null,
-            'nomor_item_arsip'       => $data['nomor item arsip'] ?? null,
-            'uraian_informasi_arsip' => $data['uraian informasi arsip'] ?? null,
-            'kurun_waktu_berkas'     => $data['kurun waktu berkas'] ?? null,
-            'media'                  => $data['media'] ?? null,
-            'jumlah'                 => $data['jumlah'] ?? null,
-            'aktif'                  => $data['aktif'] ?? null,
-            'inaktif'                => $data['inaktif'] ?? null,
-            'tingkat_perkembangan'   => $data['tingkat perkembangan'] ?? null,
-            'ruang_penyimpanan_rak'  => $ruang,
-            'no_boks_definitif'      => $noBoks,
-            'no_folder'              => $noFolder,
-            'metode_perlindungan'    => $data['metode perlindungan'] ?? null,
-            'keterangan'             => $data['keterangan'] ?? null,
+        // 🔠 Normalisasi nama header
+        $headers = [];
+        foreach ($rows[$headerRowIndex] as $key => $val) {
+            $headers[$key] = strtolower(trim(preg_replace('/\s+/', ' ', $val ?? '')));
+        }
+
+        // ✅ Daftar header minimal yang wajib ada
+        $requiredHeaders = [
+            'kode klasifikasi',
+            'uraian informasi arsip',
+            'kurun waktu berkas',
+            'lokasi simpan',
+        ];
+
+        // 🔍 Cek apakah semua header wajib ada
+        $missing = [];
+        foreach ($requiredHeaders as $req) {
+            if (!in_array($req, $headers)) {
+                $missing[] = $req;
+            }
+        }
+
+        if (!empty($missing)) {
+            return back()->withErrors([
+                'file' => '❌ Format file tidak sesuai. Header berikut tidak ditemukan: ' . implode(', ', $missing)
+            ]);
+        }
+
+        // 🔧 Jika ada subheader di bawah (misal "Ruang Penyimpanan / Rak" atau "No. Folder")
+        $nextRow = $rows[$headerRowIndex + 1] ?? [];
+        foreach ($nextRow as $key => $val) {
+            $val = strtolower(trim(preg_replace('/\s+/', ' ', $val ?? '')));
+            if ($headers[$key] === 'lokasi simpan' && $val) {
+                $headers[$key] = $val;
+            } elseif (empty($headers[$key]) && $val) {
+                $headers[$key] = $val;
+            }
+        }
+
+        // 🧮 Hitung hasil
+        $inserted = 0;
+        $duplicates = 0;
+
+        // 🔁 Loop isi data
+        for ($i = $headerRowIndex + 1; $i <= count($rows); $i++) {
+            $row = $rows[$i];
+            if (!array_filter($row)) continue;
+
+            $data = [];
+            foreach ($headers as $col => $headerName) {
+                $data[$headerName] = trim($row[$col] ?? '');
+            }
+
+            $ruang = $data['ruang penyimpanan/rak']
+                ?? $data['ruang penyimpanan / rak']
+                ?? $data['ruang penyimpanan/ rak']
+                ?? $data['ruang penyimpanan /rak']
+                ?? $data['ruang penyimpanan']
+                ?? $data['lokasi simpan']
+                ?? null;
+
+            $noBoks = $data['no. boks definitif']
+                ?? $data['no boks definitif']
+                ?? $data['no boks']
+                ?? null;
+
+            $noFolder = $data['no. folder']
+                ?? $data['no folder']
+                ?? $data['folder']
+                ?? null;
+
+            $exists = Warkah::where('kode_klasifikasi', $data['kode klasifikasi'] ?? null)
+                ->where('uraian_informasi_arsip', $data['uraian informasi arsip'] ?? null)
+                ->exists();
+
+            if ($exists) {
+                $duplicates++;
+                continue;
+            }
+
+            Warkah::create([
+                'nomor_urut'             => $data['nomor urut'] ?? null,
+                'kode_klasifikasi'       => $data['kode klasifikasi'] ?? null,
+                'jenis_arsip_vital'      => $data['jenis arsip vital'] ?? null,
+                'nomor_item_arsip'       => $data['nomor item arsip'] ?? null,
+                'uraian_informasi_arsip' => $data['uraian informasi arsip'] ?? null,
+                'kurun_waktu_berkas'     => $data['kurun waktu berkas'] ?? null,
+                'media'                  => $data['media'] ?? null,
+                'jumlah'                 => $data['jumlah'] ?? null,
+                'aktif'                  => $data['aktif'] ?? null,
+                'inaktif'                => $data['inaktif'] ?? null,
+                'tingkat_perkembangan'   => $data['tingkat perkembangan'] ?? null,
+                'ruang_penyimpanan_rak'  => $ruang,
+                'no_boks_definitif'      => $noBoks,
+                'no_folder'              => $noFolder,
+                'metode_perlindungan'    => $data['metode perlindungan'] ?? null,
+                'keterangan'             => $data['keterangan'] ?? null,
+            ]);
+
+            $inserted++;
+        }
+
+        $message = "✅ Import Data Berhasil. Data Baru Masuk: >{$inserted}< Data duplikat dilewati: >{$duplicates}<";
+        return back()->with('success', $message);
+
+    } catch (\Exception $e) {
+        return back()->withErrors([
+            'file' => 'Terjadi kesalahan saat membaca file: ' . $e->getMessage()
         ]);
-
-        $inserted++;
     }
-
-    // 📝 Pesan hasil lebih ramah pengguna
-    $message = "✅ Import berhasil "
-        . "Data baru ditambahkan: {$inserted} "
-        . "Data duplikat dilewati: {$duplicates}";
-
-    return back()->with('success', $message);
 }
+
 
 }
