@@ -154,97 +154,214 @@ class WarkahController extends Controller
         return Excel::download(new WarkahExport($filters), $fileName);
     }
 
-    public function import(Request $request)
-    {
-        $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv',
-        ]);
+//     public function import(Request $request)
+//     {
+//         $request->validate([
+//             'file' => 'required|mimes:xlsx,xls,csv',
+//         ]);
 
-        $file = $request->file('file');
-        $spreadsheet = IOFactory::load($file->getRealPath());
-        $sheet = $spreadsheet->getActiveSheet();
-        $rows = $sheet->toArray(null, true, true, true);
+//         $file = $request->file('file');
+//         $spreadsheet = IOFactory::load($file->getRealPath());
+//         $sheet = $spreadsheet->getActiveSheet();
+//         $rows = $sheet->toArray(null, true, true, true);
 
-        // Deteksi baris header
-        $headerRowIndex = null;
-        foreach ($rows as $i => $row) {
-            $rowText = strtolower(implode(' ', $row));
-            if (str_contains($rowText, 'kode klasifikasi') || str_contains($rowText, 'lokasi simpan')) {
-                $headerRowIndex = $i;
-                break;
-            }
-        }
+//         // Deteksi baris header
+//         $headerRowIndex = null;
+//         foreach ($rows as $i => $row) {
+//             $rowText = strtolower(implode(' ', $row));
+//             if (str_contains($rowText, 'kode klasifikasi') || str_contains($rowText, 'lokasi simpan')) {
+//                 $headerRowIndex = $i;
+//                 break;
+//             }
+//         }
 
-        if (!$headerRowIndex) {
-            return back()->with('error', '❌ Header tidak ditemukan di file Excel.');
-        }
+//         if (!$headerRowIndex) {
+//             return back()->with('error', 'Header tidak ditemukan di file Excel.');
+//         }
 
-       // 🔠 Normalisasi nama header
-$headers = [];
-foreach ($rows[$headerRowIndex] as $key => $val) {
-    $headers[$key] = strtolower(trim(preg_replace('/\s+/', ' ', $val ?? '')));
-}
+//        // 🔠 Normalisasi nama header
+// $headers = [];
+// foreach ($rows[$headerRowIndex] as $key => $val) {
+//     $headers[$key] = strtolower(trim(preg_replace('/\s+/', ' ', $val ?? '')));
+// }
 
-// 🔧 Jika ada subheader di bawah (misal "Ruang Penyimpanan / Rak" atau "No. Folder")
-$nextRow = $rows[$headerRowIndex + 1] ?? [];
-foreach ($nextRow as $key => $val) {
-    $val = strtolower(trim(preg_replace('/\s+/', ' ', $val ?? '')));
-    if ($headers[$key] === 'lokasi simpan' && $val) {
-        // Gabungkan dengan subheader, contoh: "lokasi simpan - ruang penyimpanan/rak"
-        $headers[$key] = $val;
-    } elseif (empty($headers[$key]) && $val) {
-        // Jika header kosong tapi subheader ada (kemungkinan besar "no folder")
-        $headers[$key] = $val;
-    }
-}
+// // 🔧 Jika ada subheader di bawah (misal "Ruang Penyimpanan / Rak" atau "No. Folder")
+// $nextRow = $rows[$headerRowIndex + 1] ?? [];
+// foreach ($nextRow as $key => $val) {
+//     $val = strtolower(trim(preg_replace('/\s+/', ' ', $val ?? '')));
+//     if ($headers[$key] === 'lokasi simpan' && $val) {
+//         // Gabungkan dengan subheader, contoh: "lokasi simpan - ruang penyimpanan/rak"
+//         $headers[$key] = $val;
+//     } elseif (empty($headers[$key]) && $val) {
+//         // Jika header kosong tapi subheader ada (kemungkinan besar "no folder")
+//         $headers[$key] = $val;
+//     }
+// }
 
-        for ($i = $headerRowIndex + 1; $i <= count($rows); $i++) {
-            $row = $rows[$i];
-            if (!array_filter($row)) continue;
+//         for ($i = $headerRowIndex + 1; $i <= count($rows); $i++) {
+//             $row = $rows[$i];
+//             if (!array_filter($row)) continue;
 
-            $data = [];
-            foreach ($headers as $col => $headerName) {
-                $data[$headerName] = trim($row[$col] ?? '');
-            }
+//             $data = [];
+//             foreach ($headers as $col => $headerName) {
+//                 $data[$headerName] = trim($row[$col] ?? '');
+//             }
 
    
-                        $ruang = $data['ruang penyimpanan/rak']
+//                         $ruang = $data['ruang penyimpanan/rak']
+//                     ?? $data['ruang penyimpanan / rak']
+//                     ?? $data['ruang penyimpanan/ rak'] // Tambahkan ini
+//                     ?? $data['ruang penyimpanan /rak']
+//                     ?? $data['ruang penyimpanan rak']
+//                     ?? $data['lokasi simpan']
+//                     ?? null;
+//                             $noBoks = $data['no. boks definitif']
+//                                 ?? $data['no boks definitif']
+//                                 ?? $data['no boks']
+//                                 ?? null;
+
+//                             $noFolder = $data['no. folder']
+//                                 ?? $data['no folder']
+//                                 ?? $data['folder']
+//                                 ?? null;
+
+//             Warkah::create([
+//                 'nomor_urut'             => $data['nomor urut'] ?? null,
+//                 'kode_klasifikasi'       => $data['kode klasifikasi'] ?? null,
+//                 'jenis_arsip_vital'      => $data['jenis arsip vital'] ?? null,
+//                 'nomor_item_arsip'       => $data['nomor item arsip'] ?? null,
+//                 'uraian_informasi_arsip' => $data['uraian informasi arsip'] ?? null,
+//                 'kurun_waktu_berkas'     => $data['kurun waktu berkas'] ?? null,
+//                 'media'                  => $data['media'] ?? null,
+//                 'jumlah'                 => $data['jumlah'] ?? null,
+//                 'aktif'                  => $data['aktif'] ?? null,
+//                 'inaktif'                => $data['inaktif'] ?? null,
+//                 'tingkat_perkembangan'   => $data['tingkat perkembangan'] ?? null,
+//                 'ruang_penyimpanan_rak'  => $ruang,
+//                 'no_boks_definitif'      => $noBoks,
+//                 'no_folder'              => $noFolder,
+//                 'metode_perlindungan'    => $data['metode perlindungan'] ?? null,
+//                 'keterangan'             => $data['keterangan'] ?? null,
+//             ]);
+//         }
+
+//         return back()->with('success', '✅ Import Data Berhasil!');
+//     }
+
+public function import(Request $request)
+{
+    $request->validate([
+        'file' => 'required|mimes:xlsx,xls,csv',
+    ]);
+
+    $file = $request->file('file');
+    $spreadsheet = IOFactory::load($file->getRealPath());
+    $sheet = $spreadsheet->getActiveSheet();
+    $rows = $sheet->toArray(null, true, true, true);
+
+    // 🧭 Deteksi baris header
+    $headerRowIndex = null;
+    foreach ($rows as $i => $row) {
+        $rowText = strtolower(implode(' ', $row));
+        if (str_contains($rowText, 'kode klasifikasi') || str_contains($rowText, 'lokasi simpan')) {
+            $headerRowIndex = $i;
+            break;
+        }
+    }
+
+    if (!$headerRowIndex) {
+        return back()->with('error', '❌ Header tidak ditemukan di file Excel.');
+    }
+
+    // 🔠 Normalisasi nama header
+    $headers = [];
+    foreach ($rows[$headerRowIndex] as $key => $val) {
+        $headers[$key] = strtolower(trim(preg_replace('/\s+/', ' ', $val ?? '')));
+    }
+
+    // 🔧 Cek subheader di bawah header utama
+    $nextRow = $rows[$headerRowIndex + 1] ?? [];
+    foreach ($nextRow as $key => $val) {
+        $val = strtolower(trim(preg_replace('/\s+/', ' ', $val ?? '')));
+        if ($headers[$key] === 'lokasi simpan' && $val) {
+            $headers[$key] = $val;
+        } elseif (empty($headers[$key]) && $val) {
+            $headers[$key] = $val;
+        }
+    }
+
+    // 🧮 Hitung hasil
+    $inserted = 0;
+    $duplicates = 0;
+
+    // 🔁 Loop isi data
+    for ($i = $headerRowIndex + 1; $i <= count($rows); $i++) {
+        $row = $rows[$i];
+        if (!array_filter($row)) continue;
+
+        $data = [];
+        foreach ($headers as $col => $headerName) {
+            $data[$headerName] = trim($row[$col] ?? '');
+        }
+
+        // 🧩 Gabung variasi nama kolom
+         $ruang = $data['ruang penyimpanan/rak']
                     ?? $data['ruang penyimpanan / rak']
                     ?? $data['ruang penyimpanan/ rak'] // Tambahkan ini
                     ?? $data['ruang penyimpanan /rak']
-                    ?? $data['ruang penyimpanan']
+                    ?? $data['ruang penyimpanan rak']
                     ?? $data['lokasi simpan']
                     ?? null;
-                            $noBoks = $data['no. boks definitif']
-                                ?? $data['no boks definitif']
-                                ?? $data['no boks']
-                                ?? null;
 
-                            $noFolder = $data['no. folder']
-                                ?? $data['no folder']
-                                ?? $data['folder']
-                                ?? null;
+        $noBoks = $data['no. boks definitif']
+            ?? $data['no boks definitif']
+            ?? $data['no boks']
+            ?? null;
 
-            Warkah::create([
-                'nomor_urut'             => $data['nomor urut'] ?? null,
-                'kode_klasifikasi'       => $data['kode klasifikasi'] ?? null,
-                'jenis_arsip_vital'      => $data['jenis arsip vital'] ?? null,
-                'nomor_item_arsip'       => $data['nomor item arsip'] ?? null,
-                'uraian_informasi_arsip' => $data['uraian informasi arsip'] ?? null,
-                'kurun_waktu_berkas'     => $data['kurun waktu berkas'] ?? null,
-                'media'                  => $data['media'] ?? null,
-                'jumlah'                 => $data['jumlah'] ?? null,
-                'aktif'                  => $data['aktif'] ?? null,
-                'inaktif'                => $data['inaktif'] ?? null,
-                'tingkat_perkembangan'   => $data['tingkat perkembangan'] ?? null,
-                'ruang_penyimpanan_rak'  => $ruang,
-                'no_boks_definitif'      => $noBoks,
-                'no_folder'              => $noFolder,
-                'metode_perlindungan'    => $data['metode perlindungan'] ?? null,
-                'keterangan'             => $data['keterangan'] ?? null,
-            ]);
+        $noFolder = $data['no. folder']
+            ?? $data['no folder']
+            ?? $data['folder']
+            ?? null;
+
+        // ⚠️ Cegah data duplikat (misalnya berdasarkan kode klasifikasi + uraian)
+        $exists = Warkah::where('kode_klasifikasi', $data['kode klasifikasi'] ?? null)
+            ->where('uraian_informasi_arsip', $data['uraian informasi arsip'] ?? null)
+            ->exists();
+
+        if ($exists) {
+            $duplicates++;
+            continue;
         }
 
-        return back()->with('success', '✅ Import Data Berhasil!');
+        // 🟢 Simpan data baru
+        Warkah::create([
+            'nomor_urut'             => $data['nomor urut'] ?? null,
+            'kode_klasifikasi'       => $data['kode klasifikasi'] ?? null,
+            'jenis_arsip_vital'      => $data['jenis arsip vital'] ?? null,
+            'nomor_item_arsip'       => $data['nomor item arsip'] ?? null,
+            'uraian_informasi_arsip' => $data['uraian informasi arsip'] ?? null,
+            'kurun_waktu_berkas'     => $data['kurun waktu berkas'] ?? null,
+            'media'                  => $data['media'] ?? null,
+            'jumlah'                 => $data['jumlah'] ?? null,
+            'aktif'                  => $data['aktif'] ?? null,
+            'inaktif'                => $data['inaktif'] ?? null,
+            'tingkat_perkembangan'   => $data['tingkat perkembangan'] ?? null,
+            'ruang_penyimpanan_rak'  => $ruang,
+            'no_boks_definitif'      => $noBoks,
+            'no_folder'              => $noFolder,
+            'metode_perlindungan'    => $data['metode perlindungan'] ?? null,
+            'keterangan'             => $data['keterangan'] ?? null,
+        ]);
+
+        $inserted++;
     }
+
+    // 📝 Pesan hasil lebih ramah pengguna
+    $message = "✅ Import berhasil "
+        . "Data baru ditambahkan: {$inserted} "
+        . "Data duplikat dilewati: {$duplicates}";
+
+    return back()->with('success', $message);
+}
+
 }

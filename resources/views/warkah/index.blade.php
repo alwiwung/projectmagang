@@ -232,6 +232,8 @@
     <div class="text-sm text-gray-500 italic">
         <i class="fas fa-info-circle"></i> Format file harus .xlsx atau .xls
     </div>
+
+    
 </div>
 
 @endsection

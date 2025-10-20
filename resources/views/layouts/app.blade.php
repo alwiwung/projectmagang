@@ -14,6 +14,8 @@
 
     <!-- Favicon -->
     <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 </head>
 
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen" x-data="{ mobileMenuOpen: false, darkMode: false }">
@@ -23,7 +25,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <!-- Logo -->
-                <a href="/" class="flex items-center space-x-2 text-xl sm:text-2xl font-bold hover:opacity-90 transition">
+                <a class="flex items-center space-x-2 text-xl sm:text-2xl font-bold hover:opacity-90 transition">
                     <i class="fa-solid fa-folder-open text-white"></i>
                     <span class="hidden sm:inline">Warkah System</span>
                     <span class="sm:hidden">Warkah</span>
@@ -130,11 +132,33 @@
             @endif
 
             @if (session('success'))
-                <div class="mb-4 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start">
-                    <i class="fa-solid fa-circle-check text-green-600 mt-1 mr-3"></i>
-                    <p class="text-green-800">{{ session('success') }}</p>
+            <div 
+                class="flex items-center gap-3 bg-green-100 border border-green-300 text-green-700 px-5 py-3 rounded-xl shadow-lg transition transform hover:scale-[1.02] mt-3"
+                id="alert-success"
+            >
+                <i class="fa-solid fa-circle-check text-xl"></i>
+                <div class="flex-1">
+                    <strong class="block font-semibold text-green-800">Berhasil!</strong>
+                    <span class="text-sm">{{ session('success') }}</span>
                 </div>
-            @endif
+                <button onclick="document.getElementById('alert-success').remove()" class="text-green-600 hover:text-green-800">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        @endif
+            @if (session('error'))
+            <div  class="flex items-center gap-3 bg-red-100 border border-red-300 text-red-700 px-5 py-3 rounded-xl shadow-lg transition transform hover:scale-[1.02]"
+                id="alert-error">
+                <i class="fa-solid fa-circle-xmark text-xl"></i>
+                <div class="flex-1">
+                    <strong class="block font-semibold text-red-800">Terjadi Kesalahan!</strong>
+                    <span class="text-sm">{!! session('error') !!}</span>
+                </div>
+                <button onclick="document.getElementById('alert-error').remove()" class="text-red-600 hover:text-red-800">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        @endif
 
             @yield('content')
         </div>
