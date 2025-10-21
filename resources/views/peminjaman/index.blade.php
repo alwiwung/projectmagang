@@ -58,7 +58,7 @@
                             onchange="this.form.submit()"
                             class="w-full sm:w-56 pl-11 pr-10 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 appearance-none bg-white transition-all duration-200 cursor-pointer font-semibold text-gray-700 shadow-md hover:shadow-lg">
                             <option value="">Semua Status</option>
-                            <option value="Dipinjam" {{ request('status') == 'Dipinjam' ? 'selected' : '' }}>🔵 Dipinjam</option>
+                            <option value="Dipinjam" {{ request('status') == 'Dipinjam' ? 'selected' : '' }}>🟡 Dipinjam</option>
                             <option value="Terlambat" {{ request('status') == 'Terlambat' ? 'selected' : '' }}>🔴 Terlambat</option>
                             <option value="Dikembalikan" {{ request('status') == 'Dikembalikan' ? 'selected' : '' }}>🟢 Dikembalikan</option>
                         </select>
@@ -81,24 +81,22 @@
             </h2>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50">
-                    <tr>
-                        <th class="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">No</th>
-                        <th class="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Kode Warkah</th>
-                        <th class="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Uraian Informasi</th>
-                        <th class="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Nama</th>
-                        <th class="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">No HP</th>
-                        <th class="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Email</th>
-                        <th class="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Tanggal Pinjam</th>
-                        <th class="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Tujuan Pinjam</th>
-                        <th class="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Batas Peminjaman</th>
-                        <th class="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Status</th>
-                        <th class="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-100">
+       <div class="max-h-[400px] overflow-y-auto overflow-x-hidden rounded-b-xl shadow-inner">
+    <table class="w-full table-auto divide-y divide-gray-200">
+        <thead class="bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50 sticky top-0 z-10">
+            <tr>
+                <th class="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">No</th>
+                <th class="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Kode Warkah</th>
+                <th class="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Uraian Informasi</th>
+                <th class="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Nama</th>
+                <th class="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Email</th>
+                <th class="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Tanggal Pinjam</th>
+                <th class="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Batas Peminjaman</th>
+                <th class="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Status</th>
+                <th class="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Aksi</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($peminjaman as $index => $item)
                     <tr class="hover:bg-gradient-to-r hover:from-blue-50 hover:to-transparent transition-all duration-200 transform hover:scale-[1.01] hover:shadow-md">
                         <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
@@ -110,7 +108,8 @@
                             <div class="flex flex-col">
                                 <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md">
                                     <i class="fa-solid fa-hashtag mr-1.5 text-xs"></i>
-                                    {{ $item->id_warkah }}
+                                    {{-- ID warkah, bukan ID peminjaman --}}
+                                    {{ $item->warkah->id ?? '-' }}
                                 </span>
                                 @if($item->warkah)
                                 <span class="text-xs text-gray-500 mt-1 font-medium">
@@ -119,6 +118,7 @@
                                 @endif
                             </div>
                         </td>
+
                         <td class="px-4 py-4 text-sm text-gray-700">
                             <div class="max-w-xs">
                                 @if($item->warkah)
@@ -134,51 +134,47 @@
                                 @endif
                             </div>
                         </td>
-                        <td class="px-4 py-4 whitespace-nowrap text-sm">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-md mr-3">
-                                    {{ strtoupper(substr($item->nama_peminjam, 0, 1)) }}
-                                </div>
-                                <div>
-                                    <p class="font-semibold text-gray-900">{{ $item->nama_peminjam }}</p>
-                                </div>
-                            </div>
+                       <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
+                       <p class="font-semibold" title="{{ $item->nama_peminjam }}">
+                                    {{ Str::limit($item->nama_peminjam, 10) }}
+                                </p>
                         </td>
-                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {{-- <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
                             {{ $item->no_hp }}
-                        </td>
+                        </td> --}}
                         <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
                             {{ $item->email }}
                         </td>
                         <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
                             {{ $item->tanggal_pinjam->format('Y-m-d') }}
                         </td>
-                        <td class="px-4 py-4 text-sm text-gray-700">
+                        {{-- <td class="px-4 py-4 text-sm text-gray-700">
                             <div class="max-w-xs truncate" title="{{ $item->tujuan_pinjam }}">
                                 {{ $item->tujuan_pinjam }}
                             </div>
-                        </td>
+                        </td> --}}
                         <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
                             {{ $item->batas_peminjaman->format('Y-m-d') }}
                         </td>
-                        <td class="px-4 py-4 whitespace-nowrap">
-                            @if($item->status == 'Dipinjam')
-                            <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg">
-                                <i class="fa-solid fa-clock mr-1.5"></i>
-                                Dipinjam
-                            </span>
-                            @elseif($item->status == 'Dikembalikan')
-                            <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg">
-                                <i class="fa-solid fa-check-circle mr-1.5"></i>
-                                Dikembalikan
-                            </span>
-                            @else
-                            <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg animate-pulse">
-                                <i class="fa-solid fa-circle-exclamation mr-1.5"></i>
-                                Terlambat
-                            </span>
-                            @endif
-                        </td>
+                       <td class="px-4 py-4 whitespace-nowrap">
+                        @if($item->status == 'Dipinjam')
+                        <span class="inline-flex items-center justify-center min-w-[110px] px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg">
+                            <i class="fa-solid fa-clock mr-1.5"></i>
+                            Dipinjam
+                        </span>
+                        @elseif($item->status == 'Dikembalikan')
+                        <span class="inline-flex items-center justify-center min-w-[110px] px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg">
+                            <i class="fa-solid fa-check-circle mr-1.5"></i>
+                            Dikembalikan
+                        </span>
+                        @else
+                        <span class="inline-flex items-center justify-center min-w-[110px] px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg animate-pulse">
+                            <i class="fa-solid fa-circle-exclamation mr-1.5"></i>
+                            Terlambat
+                        </span>
+                        @endif
+                    </td>
+
                         <td class="px-4 py-4 whitespace-nowrap text-center text-sm">
                             <div class="flex items-center justify-center gap-2">
                                <a href="{{ route('peminjaman.show', $item->id) }}"
@@ -601,12 +597,12 @@
                                                 type="date"
                                                 name="batas_peminjaman"
                                                 required
-                                                min="{{ date('Y-m-d', strtotime('+1 day')) }}"
+                                                min="{{ date('Y-m-d', strtotime('+7 day')) }}"
                                                 class="w-full pl-11 pr-4 py-3 bg-white border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all outline-none">
                                         </div>
                                         <p class="mt-1 text-xs text-gray-600">
                                             <i class="fa-solid fa-info-circle mr-1"></i>
-                                            Minimal 1 hari dari tanggal pinjam
+                                            Minimal 7 hari dari tanggal pinjam
                                         </p>
                                     </div>
 
@@ -731,7 +727,7 @@
                                     <option value="">-- Pilih Kondisi --</option>
                                     <option value="Baik">Baik</option>
                                     <option value="Rusak">Rusak</option>
-                                    <option value="Hilang">Hilang</option>
+                                    {{-- <option value="Hilang">Hilang</option> --}}
                                 </select>
                             </td>
                         </tr>

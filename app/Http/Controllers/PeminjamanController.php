@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\PeminjamanWarkah;
 use App\Models\Warkah;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+
 
 class PeminjamanController extends Controller
 {
@@ -99,7 +101,7 @@ class PeminjamanController extends Controller
 
         $validated = $request->validate([
             'tanggal_pengembalian' => 'nullable|date',
-            'kondisi' => 'required|in:Baik,Rusak,Hilang',
+            // 'kondisi' => 'required|in:Baik,Rusak,Hilang',
             'bukti' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'catatan' => 'nullable|string|max:1000',
         ]);
@@ -122,10 +124,11 @@ class PeminjamanController extends Controller
         // 🔸 Update status master warkah
         if ($peminjaman->warkah) {
             $statusBaru = match ($validated['kondisi']) {
-                'Hilang' => 'Hilang',
+                // 'Hilang' => 'Hilang',
                 'Rusak' => 'Rusak',
-                default => 'Tersedia',
+                'Baik' => 'Tersedia', // <--- lebih eksplisit
             };
+
             $peminjaman->warkah->update(['status' => $statusBaru]);
         }
 
@@ -133,44 +136,44 @@ class PeminjamanController extends Controller
     }
 
     /** 🔹 Ambil data warkah yang masih tersedia */
-    public function getAvailableWarkah(Request $request)
-    {
-        $search = $request->get('search', '');
+  public function getAvailableWarkah(Request $request)
+{
+    $search = $request->get('search', '');
 
-        $query = Warkah::where(function ($q) {
-            $q->where('status', '!=', 'Dipinjam')
-                ->orWhereNull('status')
-                ->orWhere('status', 'Tersedia');
+    // Ambil hanya warkah yang statusnya benar-benar "Tersedia"
+    $query = Warkah::where('status', 'Tersedia');
+
+    // Tambahkan filter pencarian jika ada input
+    if ($search) {
+        $query->where(function ($q) use ($search) {
+            $q->where('id', 'LIKE', "%{$search}%")
+                ->orWhere('kode_klasifikasi', 'LIKE', "%{$search}%")
+                ->orWhere('uraian_informasi_arsip', 'LIKE', "%{$search}%")
+                ->orWhere('ruang_penyimpanan_rak', 'LIKE', "%{$search}%")
+                ->orWhere('nomor_item_arsip', 'LIKE', "%{$search}%")
+                ->orWhere('kurun_waktu_berkas', 'LIKE', "%{$search}%")
+                ->orWhere('lokasi', 'LIKE', "%{$search}%")
+                ->orWhere('no_boks_definitif', 'LIKE', "%{$search}%")
+                ->orWhere('no_folder', 'LIKE', "%{$search}%");
         });
-
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('id', 'LIKE', "%{$search}%")
-                    ->orWhere('kode_klasifikasi', 'LIKE', "%{$search}%")
-                    ->orWhere('uraian_informasi_arsip', 'LIKE', "%{$search}%")
-                    ->orWhere('ruang_penyimpanan_rak', 'LIKE', "%{$search}%")
-                    ->orWhere('nomor_item_arsip', 'LIKE', "%{$search}%")
-                    ->orWhere('kurun_waktu_berkas', 'LIKE', "%{$search}%")
-                    ->orWhere('lokasi', 'LIKE', "%{$search}%")
-                    ->orWhere('no_boks_definitif', 'LIKE', "%{$search}%")
-                    ->orWhere('no_folder', 'LIKE', "%{$search}%");
-            });
-        }
-
-        $warkah = $query->select(
-            'id',
-            'kode_klasifikasi',
-            'nomor_item_arsip',
-            'uraian_informasi_arsip',
-            'ruang_penyimpanan_rak',
-            'kurun_waktu_berkas',
-            'lokasi',
-            'status'
-        )
-            ->orderBy('created_at', 'desc')
-            ->limit(50)
-            ->get();
-
-        return response()->json($warkah);
     }
+
+    $warkah = $query->select(
+        'id',
+        'kode_klasifikasi',
+        'nomor_item_arsip',
+        'uraian_informasi_arsip',
+        'ruang_penyimpanan_rak',
+        'kurun_waktu_berkas',
+        'lokasi',
+        'status'
+    )
+        ->orderBy('created_at', 'desc')
+        ->limit(50)
+        ->get();
+
+    return response()->json($warkah);
+}
+
+
 }

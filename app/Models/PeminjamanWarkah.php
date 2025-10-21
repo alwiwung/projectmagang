@@ -23,7 +23,7 @@ class PeminjamanWarkah extends Model
         'status',
         'tanggal_kembali',
          'kondisi',       // ✅ tambahkan ini
-    'bukti',         // ✅ tambahkan ini
+        'bukti',         // ✅ tambahkan ini
         'catatan'
     ];
 
@@ -38,10 +38,11 @@ class PeminjamanWarkah extends Model
      * RELASI KE MASTER WARKAH
      * =============================
      */
-    public function warkah()
-    {
-        return $this->belongsTo(Warkah::class, 'id_warkah');
-    }
+   public function warkah()
+{
+    return $this->belongsTo(Warkah::class, 'id_warkah', 'id');
+}
+
 
     /**
      * =============================

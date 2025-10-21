@@ -30,7 +30,7 @@
                 type="text" 
                 name="keyword"
                 value="{{ request('keyword') }}"
-                placeholder="Cari uraian atau kode klasifikasi..." 
+                placeholder="Cari ID, uraian informasi atau kode klasifikasi..." 
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
         </div>
 
@@ -90,6 +90,7 @@
             <thead class="bg-blue-50 border-b border-gray-200">
                 <tr>
                     <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">No</th>
+                    <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">ID</th>
                     <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
                         <i class="fa-solid fa-calendar mr-1"></i> Kurun Waktu
                     </th>
@@ -112,6 +113,9 @@
                     <tr class="bg-white hover:bg-blue-50 transition">
                         <td class="text-center text-sm font-medium px-4 py-3 align-middle">
                             {{ ($warkah->currentPage() - 1) * $warkah->perPage() + $loop->iteration }}
+                        </td>
+                        <td class="text-center text-sm font-medium px-4 py-3 align-middle">
+                            {{ $item->id }}
                         </td>
                         <td class="text-center text-sm px-4 py-3 align-middle">
                             {{ $item->kurun_waktu_berkas ?? '-' }}

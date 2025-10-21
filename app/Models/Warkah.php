@@ -65,7 +65,8 @@ class Warkah extends Model
     public function scopeSearch($query, $keyword)
     {
         return $query->where(function ($q) use ($keyword) {
-            $q->where('ruang_penyimpanan_rak', 'LIKE', "%{$keyword}%")
+             $q->where('id', $keyword) // Cari ID secara presisi
+            ->orwhere('ruang_penyimpanan_rak', 'LIKE', "%{$keyword}%")
                 ->orWhere('kode_klasifikasi', 'LIKE', "%{$keyword}%")
                 ->orWhere('uraian_informasi_arsip', 'LIKE', "%{$keyword}%")
                 ->orWhere('kurun_waktu_berkas', 'LIKE', "%{$keyword}%");
