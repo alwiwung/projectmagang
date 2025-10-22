@@ -59,6 +59,9 @@ Route::resource('peminjaman', PeminjamanController::class);
 Route::post('peminjaman/{id}/kembalikan', [PeminjamanController::class, 'kembalikan'])
     ->name('peminjaman.kembalikan');
 
+// Resource routes for Permintaan
+Route::resource('permintaan', App\Http\Controllers\PermintaanController::class);
+
     
 
     

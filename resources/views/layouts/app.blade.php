@@ -44,7 +44,7 @@
                     <a href="{{ route('peminjaman.index') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
                         <i class="fa-solid fa-handshake mr-1"></i> Peminjaman & Pengembalian
                     </a>
-                    <a href="#" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
+                    <a href="permintaan" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
                         <i class="fa-solid fa-copy mr-1"></i> Permintaan Salinan
                     </a>
                 </div>
