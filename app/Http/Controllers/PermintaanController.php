@@ -2,166 +2,112 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Permintaan;
 use Illuminate\Http\Request;
-use Picqer\Barcode\BarcodeGeneratorPNG; // untuk barcode
-use Illuminate\Support\Facades\Storage;
+use App\Models\Permintaan;
+use App\Models\Warkah;
+use Illuminate\Support\Str;
+use PDF;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class PermintaanController extends Controller
 {
     /**
-     * Menampilkan daftar permintaan salinan warkah dengan filter opsional.
+     * Tampilkan semua data permintaan
      */
-    public function index(Request $request)
+    public function index()
     {
-        $query = Permintaan::query();
+        $permintaan = Permintaan::with('warkah')->latest()->get();
 
-        // Filter berdasarkan tahun permintaan
-        if ($request->filled('tahun')) {
-            $query->whereYear('tanggal_permintaan', $request->tahun);
-        }
-
-        // Filter berdasarkan kata kunci (pemohon / instansi)
-        if ($request->filled('keyword')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('pemohon', 'like', "%{$request->keyword}%")
-                  ->orWhere('instansi', 'like', "%{$request->keyword}%");
-            });
-        }
-
-        // Ambil data terbaru dengan pagination
-        $permintaan = $query->latest()->paginate(15);
-
-        // Daftar tahun untuk dropdown filter
-        $years = range(2015, now()->year);
+        $years = Permintaan::selectRaw('YEAR(created_at) as year')
+            ->distinct()
+            ->orderBy('year', 'desc')
+            ->pluck('year');
 
         return view('permintaan.index', compact('permintaan', 'years'));
     }
 
     /**
-     * Form membuat permintaan baru.
+     * Form tambah permintaan baru
      */
     public function create()
     {
-        return view('permintaan.create');
+        $warkah = Warkah::orderBy('uraian_informasi_arsip', 'asc')->get();
+        return view('permintaan.create', compact('warkah'));
     }
 
     /**
-     * Simpan permintaan baru ke database + generate barcode.
+     * Simpan permintaan baru
      */
     public function store(Request $request)
     {
         $data = $request->validate([
+            'warkah_id' => 'required|exists:master_warkah,id',
             'pemohon' => 'required|string|max:255',
             'instansi' => 'nullable|string|max:255',
             'tanggal_permintaan' => 'required|date',
-            'kode_warkah' => 'nullable|string',
             'jumlah_salinan' => 'required|integer|min:1',
             'catatan' => 'nullable|string',
         ]);
 
-        $data['status'] = 'baru';
-        $data['created_by'] = auth()->id() ?? null;
+        $warkah = Warkah::findOrFail($data['warkah_id']);
 
-        // Set default tahapan (array)
-        $data['tahapan'] = [
-            '1' => 'Nota Dinas diterima',
-            '2' => 'Disposisi pejabat',
-            '3' => 'Pencatatan di spreadsheet',
-            '4' => 'Pencarian arsip',
-            '5' => 'Fotokopi/Salin',
-            '6' => 'Pemberian barcode',
-            '7' => 'Balasan nota dinas'
-        ];
-
-        // Simpan record ke database
-        $permintaan = Permintaan::create($data);
-
-        /**
-         * 1) Generate Barcode
-         */
-        $barcodeValue = 'PSW-' . $permintaan->id . '-' . time();
-        $generator = new BarcodeGeneratorPNG();
-        $barcodeData = $generator->getBarcode($barcodeValue, $generator::TYPE_CODE_128);
-
-        $path = 'public/barcodes/permintaan_' . $permintaan->id . '.png';
-        Storage::put($path, $barcodeData);
-
-        $permintaan->barcode_path = Storage::url($path);
-        $permintaan->save();
-
-        /**
-         * 2) Catat ke spreadsheet sederhana (CSV)
-         */
-        $csvLine = [
-            $permintaan->id,
-            $permintaan->pemohon,
-            $permintaan->instansi,
-            $permintaan->tanggal_permintaan,
-            $permintaan->kode_warkah,
-            $permintaan->jumlah_salinan,
-            $permintaan->status,
-            now()->toDateTimeString()
-        ];
-
-        $csvRow = implode(',', array_map(function ($v) {
-            return '"' . str_replace('"', '""', ($v ?? '')) . '"';
-        }, $csvLine)) . "\n";
-
-        file_put_contents(storage_path('app/permintaan_log.csv'), $csvRow, FILE_APPEND | LOCK_EX);
-
-        return redirect()->route('permintaan.index')->with('success', 'Permintaan disimpan.');
-    }
-
-    /**
-     * Tampilkan detail satu permintaan.
-     */
-    public function show(Permintaan $permintaan)
-    {
-        return view('permintaan.show', compact('permintaan'));
-    }
-
-    /**
-     * Form edit permintaan.
-     */
-    public function edit(Permintaan $permintaan)
-    {
-        return view('permintaan.edit', compact('permintaan'));
-    }
-
-    /**
-     * Update data permintaan.
-     */
-    public function update(Request $request, Permintaan $permintaan)
-    {
-        $data = $request->validate([
-            'pemohon' => 'required|string|max:255',
-            'instansi' => 'nullable|string|max:255',
-            'tanggal_permintaan' => 'required|date',
-            'kode_warkah' => 'nullable|string',
-            'jumlah_salinan' => 'required|integer|min:1',
-            'status' => 'required|string',
-            'catatan' => 'nullable|string',
+        Permintaan::create([
+            'warkah_id' => $warkah->id,
+            'uraian_informasi_arsip' => $warkah->uraian_informasi_arsip,
+            'pemohon' => $data['pemohon'],
+            'instansi' => $data['instansi'] ?? '-',
+            'tanggal_permintaan' => $data['tanggal_permintaan'],
+            'jumlah_salinan' => $data['jumlah_salinan'],
+            'catatan' => $data['catatan'] ?? null,
+            'status' => 'baru',
+            'barcode_path' => Str::uuid(),
         ]);
 
-        $permintaan->update($data);
-
-        return redirect()->route('permintaan.show', $permintaan)->with('success', 'Data diperbarui.');
+        return redirect()->route('permintaan.index')
+            ->with('success', 'Permintaan salinan berhasil disimpan.');
     }
 
     /**
-     * Hapus permintaan beserta barcode.
+     * Ubah status permintaan
      */
-    public function destroy(Permintaan $permintaan)
+    public function updateStatus($id)
     {
-        // Hapus file barcode jika ada
-        if ($permintaan->barcode_path) {
-            $file = str_replace('/storage/', 'public/', $permintaan->barcode_path);
-            Storage::delete($file);
+        $permintaan = Permintaan::findOrFail($id);
+
+        switch ($permintaan->status) {
+            case 'baru':
+                $permintaan->status = 'diproses';
+                break;
+            case 'diproses':
+                $permintaan->status = 'selesai';
+                break;
         }
 
-        $permintaan->delete();
+        $permintaan->save();
 
-        return redirect()->route('permintaan.index')->with('success', 'Data dihapus.');
+        return back()->with('success', 'Status permintaan diperbarui menjadi: ' . $permintaan->status);
     }
+
+   public function show($id)
+{
+    $permintaan = Permintaan::with('warkah')->findOrFail($id);
+
+    $textToEncode = $permintaan->nomor_perm ?? 'Data tidak tersedia'; // fallback
+
+    $qrCode = QrCode::size(200)->generate($textToEncode);
+
+    return view('permintaan.detail', compact('permintaan', 'qrCode'));
+}
+
+
+public function cetakPDF($id)
+{
+    $permintaan = Permintaan::with('warkah')->findOrFail($id);
+
+    $pdf = PDF::loadView('permintaan.pdf', compact('permintaan'))
+        ->setPaper('a4', 'portrait');
+
+    return $pdf->download('PermintaanSalinan_'.$permintaan->id.'.pdf');
+}
+
 }

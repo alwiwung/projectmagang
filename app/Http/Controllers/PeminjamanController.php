@@ -101,7 +101,7 @@ class PeminjamanController extends Controller
 
         $validated = $request->validate([
             'tanggal_pengembalian' => 'nullable|date',
-            // 'kondisi' => 'required|in:Baik,Rusak,Hilang',
+            'kondisi' => 'required|in:Baik,Rusak',
             'bukti' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'catatan' => 'nullable|string|max:1000',
         ]);

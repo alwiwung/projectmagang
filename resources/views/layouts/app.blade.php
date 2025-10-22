@@ -11,6 +11,8 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script src="//unpkg.com/alpinejs" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 
 
@@ -37,17 +39,16 @@
                 </a>
 
                 <!-- Desktop Menu -->
-                <div class="hidden md:flex items-center space-x-1 lg:space-x-6">
-                    <a href="{{ route('warkah.index') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
-                        <i class="fa-solid fa-database mr-1"></i> Master Data
-                    </a>
-                    <a href="{{ route('peminjaman.index') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
-                        <i class="fa-solid fa-handshake mr-1"></i> Peminjaman & Pengembalian
-                    </a>
-                    <a href="permintaan" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
-                        <i class="fa-solid fa-copy mr-1"></i> Permintaan Salinan
-                    </a>
-                </div>
+              <a href="{{ route('warkah.index') }}" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
+    <i class="fa-solid fa-database mr-2"></i> Master Data
+</a>
+<a href="{{ route('peminjaman.index') }}" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
+    <i class="fa-solid fa-handshake mr-2"></i> Peminjaman & Pengembalian
+</a>
+<a href="{{ route('permintaan.index') }}" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition">
+    <i class="fa-solid fa-copy mr-2"></i> Permintaan Salinan
+</a>
+
 
                 <!-- User & Mobile Menu Button -->
                 <div class="flex items-center space-x-3">
