@@ -115,7 +115,7 @@
                             {{ ($warkah->currentPage() - 1) * $warkah->perPage() + $loop->iteration }}
                         </td>
                         <td class="text-center text-sm font-medium px-4 py-3 align-middle">
-                            {{ $item->id }}
+                            #{{ $item->id }}
                         </td>
                         <td class="text-center text-sm px-4 py-3 align-middle">
                             {{ $item->kurun_waktu_berkas ?? '-' }}
