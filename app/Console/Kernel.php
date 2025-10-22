@@ -12,7 +12,16 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Cek keterlambatan setiap hari jam 8 pagi
+        $schedule->command('peminjaman:check-overdue')
+            ->dailyAt('08:00')
+            ->timezone('Asia/Jakarta');
+
+        // Alternatif: Cek setiap jam (lebih responsif)
+        // $schedule->command('peminjaman:check-overdue')->hourly();
+
+        // Alternatif: Cek setiap 30 menit
+        // $schedule->command('peminjaman:check-overdue')->everyThirtyMinutes();
     }
 
     /**
@@ -20,7 +29,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands(): void
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }

@@ -15,25 +15,33 @@ class WarkahController extends Controller
     /**
      * Tampilkan daftar arsip
      */
-    public function index(Request $request)
-    {
-        $keyword = $request->get('keyword');
-        $filters = $request->only(['kurun_waktu_berkas', 'ruang_penyimpanan_rak', 'kode_klasifikasi', 'status']);
-        $showDeleted = $request->get('show_deleted', false);
+   public function index(Request $request)
+{
+    $keyword = $request->get('keyword');
+    $filters = $request->only(['kurun_waktu_berkas', 'ruang_penyimpanan_rak', 'kode_klasifikasi', 'status']);
+    $showDeleted = $request->get('show_deleted', false);
 
-        $query = Warkah::query();
+    $query = Warkah::query();
 
-        if ($showDeleted) {
-            $query->onlyTrashed();
-        }
+    if ($showDeleted) {
+        $query->onlyTrashed();
+    }
 
-        if ($keyword) {
+    // 🔍 Cek apakah ada pencarian
+    if ($keyword) {
+        if (str_starts_with($keyword, '#')) {
+            // Hapus tanda # untuk cari berdasarkan ID
+            $id = ltrim($keyword, '#');
+            $query->where('id', 'like', "%{$id}%");
+        } else {
+            // Jalankan fungsi pencarian biasa
             $query->search($keyword);
         }
+    }
 
-        if (!empty(array_filter($filters))) {
-            $query->filter($filters);
-        }
+    if (!empty(array_filter($filters))) {
+        $query->filter($filters);
+    }
 
         $warkah = $query->orderBy('created_at', 'desc')->paginate(15);
 
