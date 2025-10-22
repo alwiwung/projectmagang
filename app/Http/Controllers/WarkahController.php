@@ -30,11 +30,13 @@ class WarkahController extends Controller
     // 🔍 Cek apakah ada pencarian
     if ($keyword) {
         if (str_starts_with($keyword, '#')) {
-            // Hapus tanda # untuk cari berdasarkan ID
+            // Jika keyword diawali tanda #, hanya cari berdasarkan ID (tepat, bukan LIKE)
             $id = ltrim($keyword, '#');
-            $query->where('id', 'like', "%{$id}%");
+            if (is_numeric($id)) {
+                $query->where('id', $id);
+            }
         } else {
-            // Jalankan fungsi pencarian biasa
+            // Kalau bukan #, jalankan pencarian teks biasa
             $query->search($keyword);
         }
     }
