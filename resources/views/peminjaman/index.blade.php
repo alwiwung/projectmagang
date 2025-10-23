@@ -1,4 +1,7 @@
 @extends('layouts.app')
+@php
+use Illuminate\Support\Str;
+@endphp
 
 @section('title', 'Peminjaman Barang')
 

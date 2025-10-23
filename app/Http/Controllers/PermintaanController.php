@@ -2,166 +2,240 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Permintaan;
 use Illuminate\Http\Request;
-use Picqer\Barcode\BarcodeGeneratorPNG; // untuk barcode
+use App\Models\Permintaan;
+use App\Models\Warkah;
 use Illuminate\Support\Facades\Storage;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use PDF;
 
 class PermintaanController extends Controller
 {
     /**
-     * Menampilkan daftar permintaan salinan warkah dengan filter opsional.
+     * Tampilkan semua data permintaan
      */
     public function index(Request $request)
-    {
-        $query = Permintaan::query();
+{
+    $query = \App\Models\Permintaan::query();
 
-        // Filter berdasarkan tahun permintaan
-        if ($request->filled('tahun')) {
-            $query->whereYear('tanggal_permintaan', $request->tahun);
-        }
-
-        // Filter berdasarkan kata kunci (pemohon / instansi)
-        if ($request->filled('keyword')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('pemohon', 'like', "%{$request->keyword}%")
-                  ->orWhere('instansi', 'like', "%{$request->keyword}%");
-            });
-        }
-
-        // Ambil data terbaru dengan pagination
-        $permintaan = $query->latest()->paginate(15);
-
-        // Daftar tahun untuk dropdown filter
-        $years = range(2015, now()->year);
-
-        return view('permintaan.index', compact('permintaan', 'years'));
+    // 🔍 Filter berdasarkan nama pemohon
+    if ($request->filled('nama')) {
+        $query->where('nama_pemohon', 'like', '%' . $request->nama . '%');
     }
 
+    // 🔍 Filter berdasarkan uraian arsip (relasi ke tabel warkah)
+    if ($request->filled('uraian')) {
+        $query->whereHas('warkah', function ($q) use ($request) {
+            $q->where('uraian_informasi_arsip', 'like', '%' . $request->uraian . '%');
+        });
+    }
+
+    // 🔍 Filter berdasarkan tanggal permintaan
+    if ($request->filled('tanggal_permintaan')) {
+        $query->whereDate('tanggal_permintaan', $request->tanggal_permintaan);
+    }
+
+    // Ambil data + relasi ke warkah
+    $permintaan = $query
+        ->with('warkah')
+        ->orderByDesc('created_at')
+        ->paginate(10)
+        ->appends($request->all()); // agar pagination tetap membawa query filter
+
+    return view('permintaan.index', compact('permintaan'));
+}
+
+
     /**
-     * Form membuat permintaan baru.
+     * Form tambah permintaan baru
      */
     public function create()
     {
-        return view('permintaan.create');
+        $warkah = Warkah::orderBy('uraian_informasi_arsip', 'asc')->get();
+        return view('permintaan.create', compact('warkah'));
     }
 
     /**
-     * Simpan permintaan baru ke database + generate barcode.
+     * Simpan permintaan baru
      */
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'pemohon' => 'required|string|max:255',
-            'instansi' => 'nullable|string|max:255',
-            'tanggal_permintaan' => 'required|date',
-            'kode_warkah' => 'nullable|string',
-            'jumlah_salinan' => 'required|integer|min:1',
-            'catatan' => 'nullable|string',
-        ]);
+public function store(Request $request)
+{
+    // ✅ Validasi input dengan dukungan MIME tambahan
+    $data = $request->validate([
+        'id_warkah' => 'required|exists:master_warkah,id',
+        'nama_pemohon' => 'required|string|max:255',
+        'instansi' => 'nullable|string|max:255',
+         'nomor_identitas' => 'nullable|string|max:100',
+        'alamat_lengkap' => 'nullable|string',
+        'nomor_telepon' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255',
+        'tanggal_permintaan' => 'required|date',
+        'jumlah_salinan' => 'required|integer|min:1',
+        'catatan_tambahan' => 'nullable|string',
+        'nota_dinas_masuk_no' => 'nullable|string|max:100',
 
-        $data['status'] = 'baru';
-        $data['created_by'] = auth()->id() ?? null;
+        'nota_dinas_masuk_file' => [
+            'nullable',
+            'file',
+            'max:4096',
+            'mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/octet-stream,application/zip', 
+        ],
 
-        // Set default tahapan (array)
-        $data['tahapan'] = [
-            '1' => 'Nota Dinas diterima',
-            '2' => 'Disposisi pejabat',
-            '3' => 'Pencatatan di spreadsheet',
-            '4' => 'Pencarian arsip',
-            '5' => 'Fotokopi/Salin',
-            '6' => 'Pemberian barcode',
-            '7' => 'Balasan nota dinas'
-        ];
+        'nomor_surat_disposisi' => 'nullable|string|max:100',
 
-        // Simpan record ke database
-        $permintaan = Permintaan::create($data);
+        'file_disposisi' => [
+            'nullable',
+            'file',
+            'max:4096',
+            'mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/octet-stream,application/zip',
+        ],
 
-        /**
-         * 1) Generate Barcode
-         */
-        $barcodeValue = 'PSW-' . $permintaan->id . '-' . time();
-        $generator = new BarcodeGeneratorPNG();
-        $barcodeData = $generator->getBarcode($barcodeValue, $generator::TYPE_CODE_128);
+        'status' => 'required|in:Diajukan,Diterima,Disposisi,Disalin,Selesai',
+    ]);
 
-        $path = 'public/barcodes/permintaan_' . $permintaan->id . '.png';
-        Storage::put($path, $barcodeData);
+    // ✅ Fallback tambahan jika PHP salah deteksi MIME (file .docx terbaca .bin)
+    $allowedExt = ['pdf', 'doc', 'docx'];
 
-        $permintaan->barcode_path = Storage::url($path);
-        $permintaan->save();
-
-        /**
-         * 2) Catat ke spreadsheet sederhana (CSV)
-         */
-        $csvLine = [
-            $permintaan->id,
-            $permintaan->pemohon,
-            $permintaan->instansi,
-            $permintaan->tanggal_permintaan,
-            $permintaan->kode_warkah,
-            $permintaan->jumlah_salinan,
-            $permintaan->status,
-            now()->toDateTimeString()
-        ];
-
-        $csvRow = implode(',', array_map(function ($v) {
-            return '"' . str_replace('"', '""', ($v ?? '')) . '"';
-        }, $csvLine)) . "\n";
-
-        file_put_contents(storage_path('app/permintaan_log.csv'), $csvRow, FILE_APPEND | LOCK_EX);
-
-        return redirect()->route('permintaan.index')->with('success', 'Permintaan disimpan.');
-    }
-
-    /**
-     * Tampilkan detail satu permintaan.
-     */
-    public function show(Permintaan $permintaan)
-    {
-        return view('permintaan.show', compact('permintaan'));
-    }
-
-    /**
-     * Form edit permintaan.
-     */
-    public function edit(Permintaan $permintaan)
-    {
-        return view('permintaan.edit', compact('permintaan'));
-    }
-
-    /**
-     * Update data permintaan.
-     */
-    public function update(Request $request, Permintaan $permintaan)
-    {
-        $data = $request->validate([
-            'pemohon' => 'required|string|max:255',
-            'instansi' => 'nullable|string|max:255',
-            'tanggal_permintaan' => 'required|date',
-            'kode_warkah' => 'nullable|string',
-            'jumlah_salinan' => 'required|integer|min:1',
-            'status' => 'required|string',
-            'catatan' => 'nullable|string',
-        ]);
-
-        $permintaan->update($data);
-
-        return redirect()->route('permintaan.show', $permintaan)->with('success', 'Data diperbarui.');
-    }
-
-    /**
-     * Hapus permintaan beserta barcode.
-     */
-    public function destroy(Permintaan $permintaan)
-    {
-        // Hapus file barcode jika ada
-        if ($permintaan->barcode_path) {
-            $file = str_replace('/storage/', 'public/', $permintaan->barcode_path);
-            Storage::delete($file);
+    foreach (['nota_dinas_masuk_file', 'file_disposisi'] as $field) {
+        if ($request->hasFile($field)) {
+            $ext = strtolower($request->file($field)->getClientOriginalExtension());
+            if (!in_array($ext, $allowedExt)) {
+                return back()->withErrors([$field => 'File harus berupa PDF, DOC, atau DOCX.'])->withInput();
+            }
         }
+    }
 
+    // ✅ Simpan file nota dinas
+    $fileNota = null;
+    if ($request->hasFile('nota_dinas_masuk_file')) {
+        $file = $request->file('nota_dinas_masuk_file');
+        $originalName = $file->getClientOriginalName();
+        $filename = uniqid('nota_') . '_' . $originalName;
+        $fileNota = $file->storeAs('nota_dinas', $filename, 'public');
+    }
+
+    // ✅ Simpan file disposisi
+    $fileDisposisi = null;
+    if ($request->hasFile('file_disposisi')) {
+        $file = $request->file('file_disposisi');
+        $originalName = $file->getClientOriginalName();
+        $filename = uniqid('disposisi_') . '_' . $originalName;
+        $fileDisposisi = $file->storeAs('disposisi', $filename, 'public');
+    }
+
+    // ✅ Simpan ke database
+    Permintaan::create([
+        'id_warkah' => $data['id_warkah'],
+        'nama_pemohon' => $data['nama_pemohon'],
+        'instansi' => $data['instansi'] ?? null,
+        'nomor_identitas' => $data['nomor_identitas'] ?? null,
+        'alamat_lengkap' => $data['alamat_lengkap'] ?? null,
+        'nomor_telepon' => $data['nomor_telepon'] ?? null,
+        'email' => $data['email'] ?? null,
+        'tanggal_permintaan' => $data['tanggal_permintaan'],
+        'jumlah_salinan' => $data['jumlah_salinan'],
+        'catatan_tambahan' => $data['catatan_tambahan'] ?? null,
+        'nota_dinas_masuk_no' => $data['nota_dinas_masuk_no'] ?? null,
+        'nota_dinas_masuk_file' => $fileNota,
+        'nomor_surat_disposisi' => $data['nomor_surat_disposisi'] ?? null,
+        'file_disposisi' => $fileDisposisi,
+        'status_permintaan' => $data['status'] ?? 'Diajukan',
+    ]);
+
+    return redirect()->route('permintaan.index')
+        ->with('success', 'Permintaan salinan warkah berhasil disimpan.');
+}
+
+
+
+
+
+   public function updateStatus(Request $request, $id)
+{
+    $request->validate([
+        'status_permintaan' => 'required|in:Diajukan,Diterima,Disposisi,Disalin,Selesai'
+    ]);
+
+    $permintaan = Permintaan::findOrFail($id);
+    $permintaan->status_permintaan = $request->status_permintaan;
+    $permintaan->save();
+
+    return redirect()->back()->with('success', 'Status berhasil diperbarui!');
+}
+    /**
+     * Update file disposisi & nota balasan
+     */
+
+
+
+    public function show($id)
+    {
+        $permintaan = Permintaan::with('warkah')->findOrFail($id);
+        $qrCode = QrCode::size(200)->generate(
+            'Permintaan #' . $permintaan->id . ' - ' . ($permintaan->warkah->uraian_informasi_arsip ?? 'Data Arsip')
+        );
+
+        return view('permintaan.show', compact('permintaan', 'qrCode'));
+    }
+
+    /**
+     * Lihat file (PDF langsung, DOC/DOCX via Google Docs)
+     */
+ public function lihatFile($id, $type)
+{
+    $permintaan = Permintaan::findOrFail($id);
+
+    // Tentukan file mana yang ingin dilihat
+    if ($type === 'nota') {
+        $filePath = $permintaan->nota_dinas_masuk_file;
+    } elseif ($type === 'disposisi') {
+        $filePath = $permintaan->file_disposisi;
+    } else {
+        abort(404);
+    }
+
+    if (!$filePath || !Storage::disk('public')->exists($filePath)) {
+        abort(404, 'File tidak ditemukan.');
+    }
+
+    $path = Storage::disk('public')->path($filePath);
+    $mime = Storage::disk('public')->mimeType($filePath);
+
+    // Jika PDF, tampilkan langsung di browser
+    if (in_array($mime, ['application/pdf'])) {
+        return response()->file($path);
+    }
+
+    // Jika DOC/DOCX, tampilkan halaman viewer.blade.php
+    if (in_array($mime, [
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ])) {
+        $fileUrl = asset('storage/' . $filePath);
+        $downloadUrl = route('permintaan.downloadFile', ['id' => $id, 'type' => $type]);
+
+        return view('permintaan.viewer', compact('fileUrl', 'downloadUrl'));
+    }
+
+    // Jika tipe lain, kembalikan file apa adanya
+    return response()->file($path);
+}
+
+ 
+    public function destroy($id)
+    {
+        $permintaan = Permintaan::findOrFail($id);
         $permintaan->delete();
 
-        return redirect()->route('permintaan.index')->with('success', 'Data dihapus.');
+        return back()->with('success', 'Data permintaan berhasil dihapus.');
     }
+
+ public function cetakPDF($id)
+{
+    // Hanya load relasi warkah
+    $permintaan = Permintaan::with(['warkah'])->findOrFail($id);
+    
+    return view('permintaan.cetak', compact('permintaan'));
+}
+
 }

@@ -6,30 +6,38 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-   public function up()
-{
-    Schema::create('permintaans', function (Blueprint $table) {
-        $table->id();
-        $table->string('pemohon')->nullable();
-        $table->string('instansi')->nullable();
-        $table->date('tanggal_permintaan')->nullable();
-        $table->string('kode_warkah')->nullable();
-        $table->integer('jumlah_salinan')->default(1);
-        $table->string('status')->default('baru'); // baru, diproses, selesai
-        $table->json('tahapan')->nullable(); // optional: menyimpan tahapan proses (json)
-        $table->string('barcode_path')->nullable();
-        $table->text('catatan')->nullable();
-        $table->unsignedBigInteger('created_by')->nullable();
-        $table->timestamps();
-    });
-}
+    public function up(): void
+    {
+        Schema::create('permintaans', function (Blueprint $table) {
+            $table->id();
 
-    /**
-     * Reverse the migrations.
-     */
+            // Relasi ke master_warkah
+            $table->foreignId('id_warkah')->constrained('master_warkah')->onDelete('cascade');
+
+            // Informasi Pemohon
+            $table->string('nama_pemohon');
+            $table->string('instansi')->nullable();
+            $table->date('tanggal_permintaan')->nullable();
+            $table->integer('jumlah_salinan')->default(1);
+            $table->text('catatan_tambahan')->nullable();
+
+            // Nota Dinas Permohonan
+            $table->string('nota_dinas_masuk_no')->nullable();
+            $table->string('nota_dinas_masuk_file')->nullable();
+
+            // Surat Disposisi
+            $table->string('nomor_surat_disposisi')->nullable();
+            $table->string('file_disposisi')->nullable();
+
+            // Status Tahapan
+            $table->enum('status_permintaan', [
+                'Diajukan', 'Diterima', 'Disposisi', 'Disalin', 'Selesai'
+            ])->default('Diajukan');
+
+            $table->timestamps();
+        });
+    }
+
     public function down(): void
     {
         Schema::dropIfExists('permintaans');

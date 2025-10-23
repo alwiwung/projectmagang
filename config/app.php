@@ -154,6 +154,10 @@ return [
     | this array to grant expanded functionality to your applications.
     |
     */
+    
+    'providers' => [
+    Milon\Barcode\BarcodeServiceProvider::class,
+    ],
 
     'providers' => ServiceProvider::defaultProviders()->merge([
         /*
@@ -184,5 +188,11 @@ return [
     'aliases' => Facade::defaultAliases()->merge([
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),
+
+'aliases' => [
+    'DNS1D' => Milon\Barcode\Facades\DNS1DFacade::class,
+    'DNS2D' => Milon\Barcode\Facades\DNS2DFacade::class,
+    ],
+
 
 ];
