@@ -401,7 +401,7 @@
                             class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
                             <option value="Diajukan" {{ old('status') == 'Diajukan' ? 'selected' : '' }}>🟡 Diajukan</option>
                             <option value="Diterima" {{ old('status') == 'Diterima' ? 'selected' : '' }}>🟢 Diterima</option>
-                            <option value="Disposisi" {{ old('status') == 'Disposisi' ? 'selected' : '' }}>🔵 Disposisi</option>
+                            {{-- <option value="Disposisi" {{ old('status') == 'Disposisi' ? 'selected' : '' }}>🔵 Disposisi</option> --}}
                             <option value="Disalin" {{ old('status') == 'Disalin' ? 'selected' : '' }}>🟣 Disalin</option>
                             <option value="Selesai" {{ old('status') == 'Selesai' ? 'selected' : '' }}>✅ Selesai</option>
                         </select>

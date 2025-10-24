@@ -181,46 +181,85 @@ public function store(Request $request)
     /**
      * Lihat file (PDF langsung, DOC/DOCX via Google Docs)
      */
- public function lihatFile($id, $type)
+public function lihatFile($id, $type)
 {
     $permintaan = Permintaan::findOrFail($id);
 
-    // Tentukan file mana yang ingin dilihat
     if ($type === 'nota') {
         $filePath = $permintaan->nota_dinas_masuk_file;
     } elseif ($type === 'disposisi') {
         $filePath = $permintaan->file_disposisi;
     } else {
-        abort(404);
+        abort(404, 'Tipe file tidak valid');
     }
 
-    if (!$filePath || !Storage::disk('public')->exists($filePath)) {
-        abort(404, 'File tidak ditemukan.');
+    if (empty($filePath)) {
+        abort(404, 'File tidak ditemukan di database');
     }
 
-    $path = Storage::disk('public')->path($filePath);
-    $mime = Storage::disk('public')->mimeType($filePath);
-
-    // Jika PDF, tampilkan langsung di browser
-    if (in_array($mime, ['application/pdf'])) {
-        return response()->file($path);
+    $path = storage_path('app/public/' . $filePath);
+    
+    if (!file_exists($path)) {
+        abort(404, 'File tidak ditemukan di server');
     }
 
-    // Jika DOC/DOCX, tampilkan halaman viewer.blade.php
-    if (in_array($mime, [
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    ])) {
-        $fileUrl = asset('storage/' . $filePath);
+    $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+
+    // Jika PDF, tampilkan langsung inline
+    if ($extension === 'pdf') {
+        return response()->file($path, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . basename($filePath) . '"'
+        ]);
+    }
+
+    // Jika DOC/DOCX, convert ke HTML atau gunakan viewer library
+    if (in_array($extension, ['doc', 'docx'])) {
         $downloadUrl = route('permintaan.downloadFile', ['id' => $id, 'type' => $type]);
+        $backUrl = route('permintaan.show', $id);
+        $filePath = $path;
+        $fileName = basename($path);
+        // PENTING: Kirim variable $type ke view
+        $fileType = $type;
 
-        return view('permintaan.viewer', compact('fileUrl', 'downloadUrl'));
+        return view('permintaan.viewer', compact('filePath', 'fileName', 'downloadUrl', 'backUrl', 'id', 'fileType'));
     }
 
-    // Jika tipe lain, kembalikan file apa adanya
     return response()->file($path);
 }
 
+public function downloadFile($id, $type)
+{
+    $permintaan = Permintaan::findOrFail($id);
+    
+    // Tentukan file mana yang akan didownload
+    if ($type === 'nota') {
+        $fileColumn = $permintaan->nota_dinas_masuk_file;
+    } elseif ($type === 'disposisi') {
+        $fileColumn = $permintaan->file_disposisi;
+    } else {
+        abort(404, 'Tipe file tidak ditemukan');
+    }
+    
+    // Cek apakah file ada di database
+    if (empty($fileColumn)) {
+        return back()->with('error', 'File tidak ditemukan untuk permintaan ini');
+    }
+    
+    // Cek apakah file ada di storage
+    if (!Storage::disk('public')->exists($fileColumn)) {
+        return back()->with('error', 'File tidak ditemukan di server');
+    }
+    
+    $filePath = Storage::disk('public')->path($fileColumn);
+    $fileName = basename($fileColumn);
+    
+    // Force download dengan headers
+    return response()->download($filePath, $fileName, [
+        'Content-Type' => Storage::disk('public')->mimeType($fileColumn),
+        'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+    ]);
+}
  
     public function destroy($id)
     {

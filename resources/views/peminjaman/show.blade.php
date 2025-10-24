@@ -81,10 +81,10 @@
     </div>
     <table class="w-full text-sm text-gray-700">
         <tbody>
-            <tr class="hover:bg-blue-50 transition">
+            {{-- <tr class="hover:bg-blue-50 transition">
                 <td class="p-3 font-semibold w-1/3 border-b border-gray-200">Nomor Item Arsip</td>
                 <td class="p-3 border-b border-gray-200">{{ $peminjaman->warkah->nomor_item_arsip ?? '-' }}</td>
-            </tr>
+            </tr> --}}
             <tr class="hover:bg-blue-50 transition">
                 <td class="p-3 font-semibold border-b border-gray-200">Kode Klasifikasi</td>
                 <td class="p-3 border-b border-gray-200">{{ $peminjaman->warkah->kode_klasifikasi ?? '-' }}</td>
@@ -97,10 +97,10 @@
                 <td class="p-3 font-semibold border-b border-gray-200">Uraian Informasi Arsip</td>
                 <td class="p-3 border-b border-gray-200">{{ $peminjaman->warkah->uraian_informasi_arsip ?? '-' }}</td>
             </tr>
-            <tr class="hover:bg-blue-50 transition">
+            {{-- <tr class="hover:bg-blue-50 transition">
                 <td class="p-3 font-semibold border-b border-gray-200">Lokasi Penyimpanan</td>
                 <td class="p-3 border-b border-gray-200">{{ $peminjaman->warkah->lokasi ?? '-' }}</td>
-            </tr>
+            </tr> --}}
             <tr class="hover:bg-blue-50 transition">
                 <td class="p-3 font-semibold">Ruang Penyimpanan / Rak</td>
                 <td class="p-3">{{ $peminjaman->warkah->ruang_penyimpanan_rak ?? '-' }}</td>

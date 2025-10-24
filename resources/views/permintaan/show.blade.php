@@ -344,9 +344,9 @@
                                     <option value="Diterima" {{ $permintaan->status_permintaan == 'Diterima' ? 'selected' : '' }}>
                                         📥 Diterima
                                     </option>
-                                    <option value="Disposisi" {{ $permintaan->status_permintaan == 'Disposisi' ? 'selected' : '' }}>
+                                    {{-- <option value="Disposisi" {{ $permintaan->status_permintaan == 'Disposisi' ? 'selected' : '' }}>
                                         📤 Disposisi
-                                    </option>
+                                    </option> --}}
                                     <option value="Disalin" {{ $permintaan->status_permintaan == 'Disalin' ? 'selected' : '' }}>
                                         📑 Disalin
                                     </option>

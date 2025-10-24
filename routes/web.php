@@ -78,8 +78,10 @@ Route::prefix('permintaan')->group(function () {
     Route::get('/create', [PermintaanController::class, 'create'])->name('permintaan.create');
     Route::post('/', [PermintaanController::class, 'store'])->name('permintaan.store');
 
-    // ⚠️ Rute khusus file — HARUS di atas /{id}
-    Route::get('/{id}/file/{type}', [PermintaanController::class, 'lihatFile'])->name('permintaan.lihatFile');
+  
+   // Pastikan route ini ada
+    Route::get('/{id}/file/{type}', [PermintaanController::class, 'lihatFile'])
+    ->name('permintaan.lihatFile');
     Route::get('/{id}/download/{type}', [PermintaanController::class, 'downloadFile'])->name('permintaan.downloadFile');
 
 
@@ -94,6 +96,39 @@ Route::prefix('permintaan')->group(function () {
     Route::delete('/{id}', [PermintaanController::class, 'destroy'])->name('permintaan.destroy');
 });
 
+// Pastikan route ini ada
+    Route::get('/permintaan/{id}/file/{type}', [PermintaanController::class, 'lihatFile'])
+    ->name('permintaan.lihatFile');
+    Route::get('/permintaan/{id}/download/{type}', [PermintaanController::class, 'downloadFile'])->name('permintaan.downloadFile');
+
+// Route untuk get file content (untuk mammoth.js)
+// Route untuk get file content (untuk mammoth.js)
+Route::get('/permintaan/{id}/file-content/{type}', function($id, $type) {
+    $permintaan = \App\Models\Permintaan::findOrFail($id);
+    
+    // PENTING: Pastikan parameter $type diteruskan dengan benar
+    if ($type === 'nota') {
+        $filePath = $permintaan->nota_dinas_masuk_file;
+    } elseif ($type === 'disposisi') {
+        $filePath = $permintaan->file_disposisi;
+    } else {
+        abort(404, 'Tipe file tidak valid');
+    }
+    
+    if (empty($filePath)) {
+        abort(404, 'File tidak ditemukan');
+    }
+    
+    $path = storage_path('app/public/' . $filePath);
+    
+    if (!file_exists($path)) {
+        abort(404, 'File tidak ditemukan di server');
+    }
+    
+    return response()->file($path, [
+        'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ]);
+})->name('permintaan.getFileContent');
 
 // Route khusus untuk cetak PDF (letakkan SEBELUM resource route atau gunakan nama berbeda)
 Route::get('/permintaan/{id}/cetak', [PermintaanController::class, 'cetakPDF'])->name('permintaan.cetak');
@@ -104,3 +139,5 @@ Route::get('/permintaan/{id}/cetak', [PermintaanController::class, 'cetakPDF'])-
 */
 Route::get('/api/warkah/search', [PermintaanController::class, 'searchWarkah'])->name('warkah.search');
 Route::get('/warkah/{id}', [PermintaanController::class, 'getWarkahDetail'])->name('warkah.detail');
+
+
