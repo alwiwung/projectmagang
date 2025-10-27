@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 @section('header')
 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
     <div>
-        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Master Data Arsip</h1>
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Daftar Master Data Warkah</h1>
         <p class="mt-2 text-sm text-gray-600">Kelola semua dokumen warkah Anda dengan mudah</p>
     </div>
     <a href="{{ route('warkah.create') }}"
@@ -93,18 +93,18 @@ use Illuminate\Support\Str;
                 <thead class="bg-blue-50 border-b border-gray-200">
                     <tr>
                         <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">No</th>
-                        <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">ID</th>
+                        <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">Kode Warkah</th>
+                        <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
+                            <i class="fa-solid fa-tag mr-1"></i> Kode Klasifikasi
+                        </th>  
+                        <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
+                            <i class="fa-solid fa-note-sticky mr-1"></i> Uraian Informasi Arsip
+                        </th> 
                         <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
                             <i class="fa-solid fa-calendar mr-1"></i> Kurun Waktu
                         </th>
                         <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
-                            <i class="fa-solid fa-tag mr-1"></i> Kode Klasifikasi
-                        </th>
-                        <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
                             <i class="fa-solid fa-map-pin mr-1"></i> Ruang Penyimpanan / Rak
-                        </th>
-                        <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
-                            <i class="fa-solid fa-note-sticky mr-1"></i> Uraian Informasi Arsip
                         </th>
                         <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
                             <i class="fa-solid fa-cog mr-1"></i> Aksi
@@ -120,8 +120,8 @@ use Illuminate\Support\Str;
                         <td class="text-center text-sm font-medium px-4 py-3 align-middle">
                             #{{ $item->id }}
                         </td>
-                        <td class="text-center text-sm px-4 py-3 align-middle">
-                            {{ $item->kurun_waktu_berkas ?? '-' }}
+                         <td class="px-6 py-4 text-sm text-gray-600 truncate max-w-xs" title="{{ $item->uraian_informasi_arsip }}">
+                            {{ Str::limit($item->uraian_informasi_arsip, 60) ?: '-' }}
                         </td>
                         <td class="text-center text-sm px-4 py-3 align-middle">
                             {{ $item->kode_klasifikasi ?? '-' }}
@@ -129,8 +129,8 @@ use Illuminate\Support\Str;
                         <td class="text-center text-sm px-4 py-3 align-middle">
                             {{ $item->ruang_penyimpanan_rak ?? '-' }}
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-600 truncate max-w-xs" title="{{ $item->uraian_informasi_arsip }}">
-                            {{ Str::limit($item->uraian_informasi_arsip, 60) ?: '-' }}
+                        <td class="text-center text-sm px-4 py-3 align-middle">
+                            {{ $item->kurun_waktu_berkas ?? '-' }}
                         </td>
 
                         <td class="text-center px-4 py-3 align-middle">

@@ -40,7 +40,7 @@
 
                 <div class="hidden md:flex space-x-6 items-center">
   <a href="{{ route('warkah.index') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition flex items-center">
-    <i class="fa-solid fa-database mr-2"></i> Master Data
+    <i class="fa-solid fa-database mr-2"></i> Master Data Warkah
   </a>
   <a href="{{ route('peminjaman.index') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition flex items-center">
     <i class="fa-solid fa-handshake mr-2"></i> Peminjaman & Pengembalian

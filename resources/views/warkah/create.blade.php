@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="max-w-6xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold text-gray-800 mb-2">Tambah Data Arsip Vital</h1>
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Tambah Data Warkah</h1>
     <p class="text-gray-500 mb-6">Isi form di bawah untuk menambahkan data arsip vital ke dalam sistem.</p>
 
     <form action="{{ route('warkah.store') }}" method="POST"
@@ -12,7 +12,47 @@
                rounded-2xl shadow-lg p-8 space-y-6 border border-blue-100 transition-all duration-300">
         @csrf
 
-        {{-- Row 1: Kurun Waktu dan Kode Klasifikasi --}}
+        {{-- Row 1: Kode Klasifikasi dan Jenis Arsip Vital --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white/70 p-4 rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    Kode Klasifikasi <span class="text-red-600">*</span>
+                </label>
+                <input type="text" name="kode_klasifikasi" value="{{ old('kode_klasifikasi') }}"
+                    class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-400 focus:ring focus:ring-blue-100 transition"
+                    placeholder="Contoh : HP.02" required>
+            </div>
+
+            <div class="bg-white/70 p-4 rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    Jenis Arsip Vital <span class="text-red-600">*</span>
+                </label>
+                <input type="text" name="jenis_arsip_vital" value="{{ old('jenis_arsip_vital') }}"
+                    class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-400 focus:ring focus:ring-blue-100 transition"
+                    placeholder="Contoh: Surat Keputusan Gubernur..." required>
+            </div>
+        </div>
+
+        {{-- Row 2: Nomor Item Arsip dan Uraian Informasi Arsip --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white/70 p-4 rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Nomor Item Arsip</label>
+                <input type="text" name="nomor_item_arsip" value="{{ old('nomor_item_arsip') }}"
+                    class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-400 focus:ring focus:ring-blue-100 transition"
+                    placeholder="Contoh: SK/01/1972">
+            </div>
+
+            <div class="bg-white/70 p-4 rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition col-span-1 md:col-span-2">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    Uraian Informasi Arsip <span class="text-red-600">*</span>
+                </label>
+                <textarea name="uraian_informasi_arsip" rows="4"
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-400 focus:ring focus:ring-blue-100 transition"
+                    placeholder="Contoh : Surat Keputusan Gubernur Kepala Daerah Provinsi Kalimantan Barat Nomor 000/A/1999 tanggal 09 April 1999..." required>{{ old('uraian_informasi_arsip') }}</textarea>
+            </div>
+        </div>
+
+        {{-- Row 3: Kurun Waktu Berkas dan Media --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="bg-white/70 p-4 rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition">
                 <label class="block text-sm font-semibold text-gray-700 mb-2">
@@ -24,63 +64,22 @@
             </div>
 
             <div class="bg-white/70 p-4 rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                    Kode Klasifikasi <span class="text-red-600">*</span>
-                </label>
-                <input type="text" name="kode_klasifikasi" value="{{ old('kode_klasifikasi') }}"
-                    class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-400 focus:ring focus:ring-blue-100 transition"
-                    placeholder="001.01" required>
-            </div>
-        </div>
-
-        {{-- Row 2: Jenis Arsip Vital dan Nomor Item Arsip --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-white/70 p-4 rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                    Jenis Arsip Vital <span class="text-red-600">*</span>
-                </label>
-                <input type="text" name="jenis_arsip_vital" value="{{ old('jenis_arsip_vital') }}"
-                    class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-400 focus:ring focus:ring-blue-100 transition"
-                    placeholder="Contoh: Surat Keputusan Gubernur..." required>
-            </div>
-
-            <div class="bg-white/70 p-4 rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Nomor Item Arsip</label>
-                <input type="text" name="nomor_item_arsip" value="{{ old('nomor_item_arsip') }}"
-                    class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-400 focus:ring focus:ring-blue-100 transition"
-                    placeholder="Contoh: SK/01/1972">
-            </div>
-        </div>
-
-        {{-- Row 3: Uraian Informasi Arsip --}}
-        <div class="bg-white/70 p-4 rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition">
-            <label class="block text-sm font-semibold text-gray-700 mb-2">
-                Uraian Informasi Arsip <span class="text-red-600">*</span>
-            </label>
-            <textarea name="uraian_informasi_arsip" rows="4"
-                class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-400 focus:ring focus:ring-blue-100 transition"
-                placeholder="Deskripsi lengkap arsip..." required>{{ old('uraian_informasi_arsip') }}</textarea>
-        </div>
-
-        {{-- Row 4: Media dan Jumlah --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-white/70 p-4 rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition">
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Media</label>
                 <input type="text" name="media" value="{{ old('media') }}"
                     class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-400 focus:ring focus:ring-blue-100 transition"
-                    placeholder="Kertas / Digital / Mikrofilm">
+                    placeholder="Contoh : Kertas / Digital / Mikrofilm">
             </div>
+        </div>
 
+        {{-- Row 4: Jumlah, Aktif, dan Inaktif --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="bg-white/70 p-4 rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition">
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Jumlah</label>
                 <input type="text" name="jumlah" value="{{ old('jumlah') }}"
                     class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-400 focus:ring focus:ring-blue-100 transition"
-                    placeholder="1 berkas">
+                    placeholder="Contoh : 1 berkas">
             </div>
-        </div>
 
-        {{-- Row 5: Aktif dan Inaktif --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="bg-white/70 p-4 rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition">
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Jangka Simpan Aktif</label>
                 <input type="text" name="aktif" value="{{ old('aktif') }}"
@@ -96,7 +95,7 @@
             </div>
         </div>
 
-        {{-- Row 6: Tingkat Perkembangan dan Ruang Penyimpanan --}}
+        {{-- Row 5: Tingkat Perkembangan dan Ruang Penyimpanan --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="bg-white/70 p-4 rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition">
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Tingkat Perkembangan</label>
@@ -112,24 +111,24 @@
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Ruang Penyimpanan / Rak</label>
                 <input type="text" name="ruang_penyimpanan_rak" value="{{ old('ruang_penyimpanan_rak') }}"
                     class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-400 focus:ring focus:ring-blue-100 transition"
-                    placeholder="Ruang A / Rak 1">
+                    placeholder="Contoh : Rak 1 Baris 1">
             </div>
         </div>
 
-        {{-- Row 7: No Boks, No Folder, Metode Perlindungan --}}
+        {{-- Row 6: No. Boks, Folder, dan Metode Perlindungan --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="bg-white/70 p-4 rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition">
                 <label class="block text-sm font-semibold text-gray-700 mb-2">No. Boks Definitif</label>
                 <input type="text" name="no_boks_definitif" value="{{ old('no_boks_definitif') }}"
                     class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-400 focus:ring focus:ring-blue-100 transition"
-                    placeholder="BX-001">
+                    placeholder="Contoh : BX-001">
             </div>
 
             <div class="bg-white/70 p-4 rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition">
                 <label class="block text-sm font-semibold text-gray-700 mb-2">No. Folder</label>
                 <input type="text" name="no_folder" value="{{ old('no_folder') }}"
                     class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-400 focus:ring focus:ring-blue-100 transition"
-                    placeholder="FLD-001">
+                    placeholder=" Contoh : B / 099 - 158 / 1972"/>
             </div>
 
             <div class="bg-white/70 p-4 rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition">
@@ -146,12 +145,12 @@
             </div>
         </div>
 
-        {{-- Row 8: Keterangan --}}
+        {{-- Row 7: Keterangan --}}
         <div class="bg-white/70 p-4 rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition">
             <label class="block text-sm font-semibold text-gray-700 mb-2">Keterangan</label>
             <textarea name="keterangan" rows="3"
                 class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-400 focus:ring focus:ring-blue-100 transition"
-                placeholder="Keterangan tambahan...">{{ old('keterangan') }}</textarea>
+                placeholder="Contoh : Lengkap">{{ old('keterangan') }}</textarea>
         </div>
 
         {{-- Tombol --}}
@@ -162,7 +161,7 @@
             </a>
             <button type="submit"
                class="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition">
-               Simpan Data
+               Tambah Data
             </button>
         </div>
     </form>

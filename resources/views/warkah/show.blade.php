@@ -5,14 +5,10 @@
 @section('header')
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Detail Arsip</h1>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Detail Data Warkah</h1>
             <p class="mt-2 text-sm text-gray-600">Informasi lengkap data arsip</p>
         </div>
         <div class="flex gap-2 mt-4 sm:mt-0">
-            <a href="{{ route('warkah.edit', $warkah->id) }}" 
-               class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition">
-                <i class="fa-solid fa-pencil mr-2"></i> Edit
-            </a>
             <a href="{{ route('warkah.index') }}" 
                class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition">
                 <i class="fa-solid fa-arrow-left mr-2"></i> Kembali
@@ -24,40 +20,16 @@
 @section('content')
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2 space-y-6">
-        <!-- Informasi Dasar -->
+
+        <!-- Informasi Arsip -->
         <div class="bg-white rounded-lg shadow-md p-6">
             <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <i class="fa-solid fa-info-circle text-blue-600 mr-2"></i> Informasi Dasar
+                <i class="fa-solid fa-layer-group text-blue-600 mr-2"></i> Informasi Arsip
             </h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-2">
-                        <i class="fa-solid fa-calendar mr-1"></i> Kurun Waktu Berkas
-                    </label>
-                    <div class="bg-gray-50 px-4 py-3 rounded-lg">
-                        <p class="text-gray-900 font-medium">{{ $warkah->kurun_waktu_berkas }}</p>
-                    </div>
-                </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-2">
-                        <i class="fa-solid fa-map-pin mr-1"></i> Ruang Penyimpanan / Rak
-                    </label>
-                    <div class="bg-gray-50 px-4 py-3 rounded-lg">
-                        <p class="text-gray-900 font-medium">{{ $warkah->ruang_penyimpanan_rak }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Klasifikasi & Arsip -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <i class="fa-solid fa-layer-group text-blue-600 mr-2"></i> Klasifikasi & Arsip
-            </h2>
-            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Kode Klasifikasi -->
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-2">
                         <i class="fa-solid fa-barcode mr-1"></i> Kode Klasifikasi
@@ -69,6 +41,7 @@
                     </div>
                 </div>
 
+                <!-- Jenis Arsip Vital -->
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-2">
                         <i class="fa-solid fa-star mr-1"></i> Jenis Arsip Vital
@@ -78,6 +51,77 @@
                     </div>
                 </div>
 
+                <!-- Nomor Item Arsip -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">
+                        <i class="fa-solid fa-hashtag mr-1"></i> Nomor Item Arsip
+                    </label>
+                    <div class="bg-gray-50 px-4 py-3 rounded-lg">
+                        <p class="text-gray-900 font-medium">{{ $warkah->nomor_item_arsip ?? '-' }}</p>
+                    </div>
+                </div>
+
+                <!-- Uraian Informasi Arsip -->
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-600 mb-2">
+                        <i class="fa-solid fa-align-left mr-1"></i> Uraian Informasi Arsip
+                    </label>
+                    <div class="bg-gray-50 px-4 py-3 rounded-lg">
+                        <p class="text-gray-900 whitespace-pre-wrap leading-relaxed">{{ $warkah->uraian_informasi_arsip }}</p>
+                    </div>
+                </div>
+
+                <!-- Kurun Waktu Berkas -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">
+                        <i class="fa-solid fa-calendar mr-1"></i> Kurun Waktu Berkas
+                    </label>
+                    <div class="bg-gray-50 px-4 py-3 rounded-lg">
+                        <p class="text-gray-900 font-medium">{{ $warkah->kurun_waktu_berkas }}</p>
+                    </div>
+                </div>
+
+                <!-- Media -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">
+                        <i class="fa-solid fa-photo-film mr-1"></i> Media
+                    </label>
+                    <div class="bg-gray-50 px-4 py-3 rounded-lg">
+                        <p class="text-gray-900 font-medium">{{ $warkah->media ?? '-' }}</p>
+                    </div>
+                </div>
+
+                <!-- Jumlah -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">
+                        <i class="fa-solid fa-box mr-1"></i> Jumlah
+                    </label>
+                    <div class="bg-gray-50 px-4 py-3 rounded-lg">
+                        <p class="text-gray-900 font-medium text-lg">{{ $warkah->jumlah }}</p>
+                    </div>
+                </div>
+
+                <!-- Jangka Simpan Aktif -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">
+                        <i class="fa-solid fa-clock mr-1"></i> Jangka Simpan Aktif
+                    </label>
+                    <div class="bg-gray-50 px-4 py-3 rounded-lg">
+                        <p class="text-gray-900 font-medium">{{ $warkah->aktif ?? '-' }}</p>
+                    </div>
+                </div>
+
+                <!-- Jangka Simpan Inaktif -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">
+                        <i class="fa-solid fa-hourglass-half mr-1"></i> Jangka Simpan Inaktif
+                    </label>
+                    <div class="bg-gray-50 px-4 py-3 rounded-lg">
+                        <p class="text-gray-900 font-medium">{{ $warkah->inaktif ?? '-' }}</p>
+                    </div>
+                </div>
+
+                <!-- Tingkat Perkembangan -->
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-2">
                         <i class="fa-solid fa-chart-line mr-1"></i> Tingkat Perkembangan
@@ -92,33 +136,27 @@
                     </div>
                 </div>
 
+                <!-- Ruang Penyimpanan / Rak -->
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-2">
-                        <i class="fa-solid fa-circle-check mr-1"></i> Status Aktif / Inaktif
+                        <i class="fa-solid fa-map-pin mr-1"></i> Ruang Penyimpanan / Rak
                     </label>
                     <div class="bg-gray-50 px-4 py-3 rounded-lg">
-                        <p class="text-gray-900 font-medium">Aktif: {{ $warkah->aktif ?? '-' }}, Inaktif: {{ $warkah->inaktif ?? '-' }}</p>
+                        <p class="text-gray-900 font-medium">{{ $warkah->ruang_penyimpanan_rak }}</p>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Informasi Penyimpanan -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <i class="fa-solid fa-warehouse text-blue-600 mr-2"></i> Informasi Penyimpanan
-            </h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- No. Boks Definitif -->
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-2">
-                        <i class="fa-solid fa-box mr-1"></i> No. Boks Definitif
+                        <i class="fa-solid fa-box-archive mr-1"></i> No. Boks Definitif
                     </label>
                     <div class="bg-gray-50 px-4 py-3 rounded-lg">
                         <p class="text-gray-900 font-medium">{{ $warkah->no_boks_definitif }}</p>
                     </div>
                 </div>
 
+                <!-- No. Folder -->
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-2">
                         <i class="fa-solid fa-folder mr-1"></i> No. Folder
@@ -128,6 +166,7 @@
                     </div>
                 </div>
 
+                <!-- Metode Perlindungan -->
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-2">
                         <i class="fa-solid fa-shield mr-1"></i> Metode Perlindungan
@@ -138,39 +177,20 @@
                         </span>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Deskripsi -->
-        <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
-            <div>
-                <label class="block text-sm font-medium text-gray-600 mb-2">
-                    <i class="fa-solid fa-align-left mr-1"></i> Uraian Informasi Arsip
-                </label>
-                <div class="bg-gray-50 px-4 py-3 rounded-lg">
-                    <p class="text-gray-900 whitespace-pre-wrap leading-relaxed">{{ $warkah->uraian_informasi_arsip }}</p>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-600 mb-2">
-                    <i class="fa-solid fa-box mr-1"></i> Jumlah
-                </label>
-                <div class="bg-gray-50 px-4 py-3 rounded-lg">
-                    <p class="text-gray-900 font-medium text-lg">{{ $warkah->jumlah }}</p>
-                </div>
-            </div>
-
-            @if($warkah->keterangan)
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-2">
-                        <i class="fa-solid fa-note-sticky mr-1"></i> Keterangan
-                    </label>
-                    <div class="bg-gray-50 px-4 py-3 rounded-lg">
-                        <p class="text-gray-900 whitespace-pre-wrap">{{ $warkah->keterangan }}</p>
+                <!-- Keterangan -->
+                @if($warkah->keterangan)
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-600 mb-2">
+                            <i class="fa-solid fa-note-sticky mr-1"></i> Keterangan
+                        </label>
+                        <div class="bg-gray-50 px-4 py-3 rounded-lg">
+                            <p class="text-gray-900 whitespace-pre-wrap">{{ $warkah->keterangan }}</p>
+                        </div>
                     </div>
-                </div>
-            @endif
+                @endif
+
+            </div>
         </div>
     </div>
 

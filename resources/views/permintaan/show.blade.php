@@ -32,16 +32,6 @@
             </div>
         </div>
 
-        {{-- Notifikasi --}}
-        @if (session('success'))
-            <div class="mb-6 p-4 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 shadow-sm">
-                <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-check-circle text-green-600 text-xl"></i>
-                    <span class="text-green-700 font-medium">{{ session('success') }}</span>
-                </div>
-            </div>
-        @endif
-
         @if (session('error'))
             <div class="mb-6 p-4 rounded-xl bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 shadow-sm">
                 <div class="flex items-center gap-3">

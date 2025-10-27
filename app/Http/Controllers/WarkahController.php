@@ -114,7 +114,7 @@ class WarkahController extends Controller
 
         Warkah::create($validated);
 
-        return redirect()->route('warkah.index')->with('success', 'Data arsip berhasil ditambahkan.');
+        return redirect()->route('warkah.index')->with('success', 'Data Warkah berhasil ditambahkan.');
     }
 
     public function show(Warkah $warkah)
