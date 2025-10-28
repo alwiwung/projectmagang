@@ -14,51 +14,49 @@ class WarkahExport implements FromCollection, WithHeadings, WithMapping
      */
     public function collection()
     {
-        return Warkah::all();
+        return Warkah::orderBy('id', 'asc')->get();
     }
 
     /**
      * Tentukan header kolom di file Excel
+     * (Disesuaikan agar sama seperti format import)
      */
     public function headings(): array
     {
         return [
-            'ID',
-            'Kurun Waktu Berkas',
-            'Lokasi',
+            'no_urut',
             'Kode Klasifikasi',
             'Jenis Arsip Vital',
             'Nomor Item Arsip',
             'Uraian Informasi Arsip',
+            'Kurun Waktu Berkas',
             'Media',
             'Jumlah',
             'Jangka Simpan Aktif',
             'Jangka Simpan Inaktif',
             'Tingkat Perkembangan',
-            'Ruang Penyimpanan Rak',
-            'No Boks Definitif',
-            'No Folder',
+            'Ruang Penyimpanan / Rak',
+            'No. Boks Definitif',
+            'No. Folder',
             'Metode Perlindungan',
             'Keterangan',
             'Status',
-            'Tanggal Dieksport',
-
         ];
     }
 
     /**
      * Mapping data dari model ke kolom Excel
+     * (Urut sesuai dengan headings di atas)
      */
     public function map($item): array
     {
         return [
             $item->id,
-            $item->kurun_waktu_berkas,
-            $item->lokasi,
             $item->kode_klasifikasi,
             $item->jenis_arsip_vital,
             $item->nomor_item_arsip,
             $item->uraian_informasi_arsip,
+            $item->kurun_waktu_berkas,
             $item->media,
             $item->jumlah,
             $item->jangka_simpan_aktif,
@@ -70,7 +68,6 @@ class WarkahExport implements FromCollection, WithHeadings, WithMapping
             $item->metode_perlindungan,
             $item->keterangan,
             $item->status,
-            $item->created_at ? $item->created_at->format('Y-m-d H:i:s') : '',
         ];
     }
 }

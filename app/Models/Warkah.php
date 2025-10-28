@@ -14,12 +14,11 @@ class Warkah extends Model
     protected $table = 'master_warkah';
 
     protected $fillable = [
-        'kurun_waktu_berkas',
-        'lokasi',
         'kode_klasifikasi',
         'jenis_arsip_vital',
         'nomor_item_arsip',
         'uraian_informasi_arsip',
+        'kurun_waktu_berkas',
         'media',
         'jumlah',
         'jangka_simpan_aktif',

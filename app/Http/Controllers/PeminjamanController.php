@@ -27,17 +27,23 @@ class PeminjamanController extends Controller
             }
         }
 
-        // 🔸 Filter pencarian
+        // 🔸 Filter pencarian dengan normalisasi
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
-            $query->where(function ($q) use ($search) {
+            
+            // ✨ Normalisasi keyword dengan menghapus spasi
+            $normalizedSearch = preg_replace('/\s+/', '', $search);
+            
+            $query->where(function ($q) use ($search, $normalizedSearch) {
+                // Pencarian biasa tanpa normalisasi untuk nama, email, no_hp
                 $q->where('nama_peminjam', 'like', '%' . $search . '%')
                     ->orWhere('email', 'like', '%' . $search . '%')
                     ->orWhere('no_hp', 'like', '%' . $search . '%')
-                    ->orWhereHas('warkah', function ($q2) use ($search) {
-                        $q2->where('kode_klasifikasi', 'like', '%' . $search . '%')
-                            ->orWhere('uraian_informasi_arsip', 'like', '%' . $search . '%')
-                            ->orWhere('nomor_item_arsip', 'like', '%' . $search . '%');
+                    // Pencarian dengan normalisasi untuk data warkah
+                    ->orWhereHas('warkah', function ($q2) use ($normalizedSearch) {
+                        $q2->whereRaw("REPLACE(REPLACE(kode_klasifikasi, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedSearch}%"])
+                            ->orWhereRaw("REPLACE(REPLACE(uraian_informasi_arsip, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedSearch}%"])
+                            ->orWhereRaw("REPLACE(REPLACE(nomor_item_arsip, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedSearch}%"]);
                     });
             });
         }
@@ -65,7 +71,6 @@ class PeminjamanController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'id_warkah' => 'required|exists:master_warkah,id',
             'nama_peminjam' => 'required|string|max:255',
             'no_hp' => 'required|string|max:20',
             'email' => 'required|email|max:255',
@@ -79,7 +84,8 @@ class PeminjamanController extends Controller
         if ($warkah->isDipinjam()) {
             return back()->withErrors(['id_warkah' => 'Warkah ini sedang dipinjam oleh orang lain']);
         }
-
+        
+        $validated['id_warkah'] = $request->id_warkah;
         PeminjamanWarkah::create($validated);
         $warkah->update(['status' => 'Dipinjam']);
 
@@ -136,44 +142,44 @@ class PeminjamanController extends Controller
     }
 
     /** 🔹 Ambil data warkah yang masih tersedia */
-  public function getAvailableWarkah(Request $request)
-{
-    $search = $request->get('search', '');
+    public function getAvailableWarkah(Request $request)
+    {
+        $search = $request->get('search', '');
 
-    // Ambil hanya warkah yang statusnya benar-benar "Tersedia"
-    $query = Warkah::where('status', 'Tersedia');
+        // Ambil hanya warkah yang statusnya benar-benar "Tersedia"
+        $query = Warkah::where('status', 'Tersedia');
 
-    // Tambahkan filter pencarian jika ada input
-    if ($search) {
-        $query->where(function ($q) use ($search) {
-            $q->where('id', 'LIKE', "%{$search}%")
-                ->orWhere('kode_klasifikasi', 'LIKE', "%{$search}%")
-                ->orWhere('uraian_informasi_arsip', 'LIKE', "%{$search}%")
-                ->orWhere('ruang_penyimpanan_rak', 'LIKE', "%{$search}%")
-                ->orWhere('nomor_item_arsip', 'LIKE', "%{$search}%")
-                ->orWhere('kurun_waktu_berkas', 'LIKE', "%{$search}%")
-                ->orWhere('lokasi', 'LIKE', "%{$search}%")
-                ->orWhere('no_boks_definitif', 'LIKE', "%{$search}%")
-                ->orWhere('no_folder', 'LIKE', "%{$search}%");
-        });
+        // ✨ Tambahkan filter pencarian dengan normalisasi jika ada input
+        if ($search) {
+            // Normalisasi keyword dengan menghapus spasi
+            $normalizedSearch = preg_replace('/\s+/', '', $search);
+            
+            $query->where(function ($q) use ($normalizedSearch) {
+                $q->whereRaw("REPLACE(REPLACE(kode_klasifikasi, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedSearch}%"])
+                    ->orWhereRaw("REPLACE(REPLACE(uraian_informasi_arsip, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedSearch}%"])
+                    ->orWhereRaw("REPLACE(REPLACE(ruang_penyimpanan_rak, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedSearch}%"])
+                    ->orWhereRaw("REPLACE(REPLACE(nomor_item_arsip, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedSearch}%"])
+                    ->orWhereRaw("REPLACE(REPLACE(kurun_waktu_berkas, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedSearch}%"])
+                    ->orWhereRaw("REPLACE(REPLACE(lokasi, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedSearch}%"])
+                    ->orWhereRaw("REPLACE(REPLACE(no_boks_definitif, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedSearch}%"])
+                    ->orWhereRaw("REPLACE(REPLACE(no_folder, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedSearch}%"]);
+            });
+        }
+
+        $warkah = $query->select(
+            'id',
+            'kode_klasifikasi',
+            'nomor_item_arsip',
+            'uraian_informasi_arsip',
+            'ruang_penyimpanan_rak',
+            'kurun_waktu_berkas',
+            'lokasi',
+            'status'
+        )
+            ->orderBy('created_at', 'desc')
+            ->limit(50)
+            ->get();
+
+        return response()->json($warkah);
     }
-
-    $warkah = $query->select(
-        'id',
-        'kode_klasifikasi',
-        'nomor_item_arsip',
-        'uraian_informasi_arsip',
-        'ruang_penyimpanan_rak',
-        'kurun_waktu_berkas',
-        'lokasi',
-        'status'
-    )
-        ->orderBy('created_at', 'desc')
-        ->limit(50)
-        ->get();
-
-    return response()->json($warkah);
-}
-
-
 }

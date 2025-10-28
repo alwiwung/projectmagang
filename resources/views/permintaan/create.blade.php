@@ -60,116 +60,190 @@
 <label for="id_warkah" class="block text-sm font-medium text-gray-700 mb-2">
     🗂️ Dokumen Warkah <span class="text-red-500">*</span>
 </label>
-
 <div 
     x-data="{
         open: false,
         search: '',
-        selectOption(id, text) {
-            this.open = false;
-            document.getElementById('id_warkah').value = id;
-            this.$refs.selected_text.innerText = text;
+        loading: false,
+        selected: null,
+        warkahList: @js($warkah->toArray()),
+
+        getStatusClass(status) {
+            switch (status?.toLowerCase()) {
+                case 'tersedia':
+                    return 'bg-green-100 text-green-700 border-green-200';
+                case 'dipinjam':
+                    return 'bg-red-100 text-red-700 border-red-200';
+                case 'proses':
+                    return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+                case 'rusak':
+                    return 'bg-gray-200 text-gray-700 border-gray-300';
+                default:
+                    return 'bg-blue-100 text-blue-700 border-blue-200';
+            }
         },
-        get filteredOptions() {
-            return Array.from(this.$refs.options.children).filter(el => 
-                el.dataset.text.includes(this.search.toLowerCase())
+
+        searchWarkah() {
+            this.open = true; // auto buka saat ketik
+            const all = @js($warkah->toArray());
+            if (this.search.trim() === '') {
+                this.warkahList = all;
+                return;
+            }
+
+            const searchLower = this.search.toLowerCase();
+            this.warkahList = all.filter(item =>
+                item.uraian_informasi_arsip?.toLowerCase().includes(searchLower) ||
+                item.kode_klasifikasi?.toLowerCase().includes(searchLower) ||
+                item.ruang_penyimpanan_rak?.toLowerCase().includes(searchLower) ||
+                item.kurun_waktu_berkas?.toLowerCase().includes(searchLower)
             );
+        },
+
+        selectItem(item) {
+            this.selected = item;
+            this.open = false;
+            this.search = '';
+        },
+
+        clearSelection() {
+            this.selected = null;
+            this.search = '';
         }
     }" 
-    class="relative"
+    class="mb-6 relative"
 >
-    {{-- Hidden Select for Form Submission --}}
-    <select id="id_warkah" name="id_warkah" required class="hidden">
-        <option value="">-- Pilih Dokumen Warkah --</option>
-        @foreach ($warkah as $item)
-            <option value="{{ $item->id }}">{{ $item->uraian_informasi_arsip }}</option>
-        @endforeach
-    </select>
-
-    {{-- Custom Dropdown --}}
-    <button type="button" 
-        @click="open = !open" 
-        class="w-full px-4 py-4 pr-10 bg-white border-2 border-gray-300 rounded-lg 
-               focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all 
-               hover:border-blue-400 hover:shadow-md text-left text-gray-700 font-medium 
-               flex items-center justify-between">
-        <span x-ref="selected_text" class="text-gray-400">-- Pilih Dokumen Warkah --</span>
-        <svg class="w-5 h-5 text-blue-500 transition-transform duration-300"
-             :class="{ 'rotate-180': open }"
-             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M19 9l-7 7-7-7" />
-        </svg>
-    </button>
-
-    {{-- Dropdown Panel --}}
-    <div 
-        x-show="open"
-        @click.outside="open = false"
-        x-transition
-        class="absolute z-50 w-full mt-2 bg-white border-2 border-gray-300 rounded-lg shadow-xl max-h-96 overflow-hidden"
+    <!-- Label -->
+    <label 
+        class="block text-sm font-semibold text-gray-700 mb-2 flex justify-between items-center cursor-pointer"
+        @click="open = true"
     >
-        {{-- Search Input --}}
-        <div class="p-3 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-            <div class="relative">
-                <input 
-                    type="text" 
-                    x-model="search" 
-                    placeholder="🔍 Cari dokumen warkah..." 
-                    class="w-full px-4 py-2 pr-10 bg-white border border-gray-300 rounded-lg 
-                           focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
-                >
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        <span>🗂️ Cari dan Pilih Warkah <span class="text-red-500">*</span></span>
+        <!-- Status dinamis di ujung kanan label -->
+        <template x-if="selected">
+            <span :class="'text-xs font-semibold px-2 py-1 rounded-full border ' + getStatusClass(selected.status)">
+                <span x-text="selected.status || 'Tidak diketahui'"></span>
+            </span>
+        </template>
+    </label>
+
+    <!-- Input Pencarian -->
+    <div class="relative" @click.away="open = false">
+        <div 
+            class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg hover:border-blue-500 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100 transition-all"
+            @click="open = true"
+        >
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <input
+                        type="text"
+                        x-model="search"
+                        @input.debounce.300ms="searchWarkah()"
+                        @focus="open = true"
+                        placeholder="Ketik untuk mencari warkah (kode, uraian, lokasi, tahun)..."
+                        class="w-full outline-none text-gray-900 placeholder-gray-400 bg-transparent"
+                    />
+                </div>
+                <div class="flex items-center space-x-2">
+                    <template x-if="selected">
+                        <button
+                            type="button"
+                            @click.stop="clearSelection()"
+                            class="text-gray-400 hover:text-red-500 transition"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </template>
+                    <svg 
+                        class="w-5 h-5 text-gray-400 transition-transform" 
+                        :class="open ? 'rotate-180' : ''" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                    >
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </div>
             </div>
-        </div>
 
-        {{-- Options List --}}
-        <div x-ref="options" class="overflow-y-auto max-h-80 custom-scrollbar">
-            @foreach ($warkah as $item)
-                <div
-                    class="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 transition-colors"
-                    data-value="{{ $item->id }}"
-                    data-text="{{ strtolower($item->uraian_informasi_arsip) }}"
-                    x-show="'{{ strtolower($item->uraian_informasi_arsip) }}'.includes(search.toLowerCase())"
-                    @click="selectOption('{{ $item->id }}', '{{ addslashes($item->uraian_informasi_arsip) }}')"
-                >
-                    <div class="flex items-start">
-                        <span class="text-blue-500 mr-2 mt-1">📄</span>
-                        <span class="text-sm text-gray-700 leading-relaxed">
-                            {{ strlen($item->uraian_informasi_arsip) > 120 
-                                ? substr($item->uraian_informasi_arsip, 0, 120) . '...' 
-                                : $item->uraian_informasi_arsip }}
+            <!-- Selected Item -->
+            <template x-if="selected">
+                <div class="mt-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 flex justify-between items-start">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-900 break-words" x-text="selected.uraian_informasi_arsip"></p>
+                        <p class="text-xs text-gray-600 mt-1 flex flex-wrap gap-2">
+                            <span x-text="selected.kode_klasifikasi || '-'"></span>
+                            <span x-text="selected.ruang_penyimpanan_rak"></span>
+                            <span x-text="selected.kurun_waktu_berkas"></span>
+                        </p>
+                    </div>
+                    <div class="ml-3 flex-shrink-0">
+                        <span :class="'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ' + getStatusClass(selected.status)">
+                            <span x-text="selected.status || 'Tidak diketahui'"></span>
                         </span>
                     </div>
                 </div>
-            @endforeach
+            </template>
         </div>
 
-        {{-- No Results --}}
-        <div x-show="filteredOptions.length === 0" class="px-4 py-8 text-center text-gray-500">
-            <svg class="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 
-                         11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <p class="font-medium">Tidak ada hasil yang ditemukan</p>
-            <p class="text-sm mt-1">Coba kata kunci lain</p>
+        <!-- Dropdown -->
+        <div
+            x-show="open"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 translate-y-1"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 translate-y-0"
+            x-transition:leave-end="opacity-0 translate-y-1"
+            class="absolute z-50 mt-2 w-full bg-white border-2 border-gray-200 rounded-xl shadow-2xl max-h-96 overflow-y-auto"
+        >
+            <template x-if="warkahList.length > 0">
+                <div>
+                    <template x-for="item in warkahList" :key="item.id">
+                        <div
+                            @click="selectItem(item)"
+                            class="px-5 py-4 hover:bg-blue-50 cursor-pointer border-b border-gray-100 flex justify-between items-start transition-all duration-150"
+                        >
+                            <div>
+                                <p class="text-sm font-medium text-gray-900 leading-snug" x-text="item.uraian_informasi_arsip"></p>
+                                <div class="flex flex-wrap gap-2 mt-2">
+                                    <span class="px-2 py-1 text-xs bg-gray-100 rounded-md border border-gray-200" x-text="item.kode_klasifikasi || '-'"></span>
+                                    <template x-if="item.ruang_penyimpanan_rak">
+                                        <span class="px-2 py-1 text-xs bg-purple-50 text-purple-700 rounded-md border border-purple-200" x-text="item.ruang_penyimpanan_rak"></span>
+                                    </template>
+                                    <template x-if="item.kurun_waktu_berkas">
+                                        <span class="px-2 py-1 text-xs bg-amber-50 text-amber-700 rounded-md border border-amber-200" x-text="item.kurun_waktu_berkas"></span>
+                                    </template>
+                                </div>
+                            </div>
+                            <div class="ml-3 flex-shrink-0">
+                                <span :class="'inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold border ' + getStatusClass(item.status)">
+                                    <span x-text="item.status || 'Tidak diketahui'"></span>
+                                </span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+            <template x-if="warkahList.length === 0">
+                <div class="p-6 text-center text-gray-500">Tidak ada warkah ditemukan.</div>
+            </template>
         </div>
     </div>
+
+    <!-- Hidden input -->
+    <input type="hidden" name="id_warkah" :value="selected ? selected.id : ''" required>
+
+    <p class="mt-2 text-xs text-gray-600 flex items-center">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        Ketik untuk mencari berdasarkan kode klasifikasi, uraian informasi, lokasi, tahun, atau nomor item arsip.
+    </p>
 </div>
 
-<p class="text-xs text-gray-500 mt-2 flex items-center">
-    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-    </svg>
-    Pilih dokumen warkah yang akan dimintakan salinan
-</p>
 
 
                   {{-- Section 2: Data Pemohon --}}

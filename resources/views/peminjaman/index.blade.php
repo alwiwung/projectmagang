@@ -87,17 +87,36 @@ use Illuminate\Support\Str;
        <div class="max-h-[400px] overflow-y-auto overflow-x-hidden rounded-b-xl shadow-inner">
     <table class="w-full table-auto divide-y divide-gray-200">
         <thead class="bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50 sticky top-0 z-10">
-            <tr>
-                <th class="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">No</th>
-                <th class="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Kode Warkah</th>
-                <th class="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Uraian Informasi</th>
-                <th class="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Nama</th>
-                <th class="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Email</th>
-                <th class="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Tanggal Pinjam</th>
-                <th class="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Batas Peminjaman</th>
-                <th class="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Status</th>
-                <th class="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">Aksi</th>
-            </tr>
+           <tr>
+    <th class="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">
+        No
+    </th>
+    <th class="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">
+        Kode Klasifikasi
+    </th>
+    <th class="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">
+        Uraian Informasi Warkah
+    </th>
+    <th class="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">
+        Nama
+    </th>
+    <th class="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">
+        Email
+    </th>
+    <th class="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">
+        Tanggal Pinjam
+    </th>
+    <th class="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">
+        Batas Peminjaman
+    </th>
+    <th class="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">
+        Status
+    </th>
+    <th class="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">
+        Aksi
+    </th>
+</tr>
+
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($peminjaman as $index => $item)
@@ -107,20 +126,19 @@ use Illuminate\Support\Str;
                                 {{ $peminjaman->firstItem() + $index }}
                             </span>
                         </td>
-                        <td class="px-4 py-4 whitespace-nowrap">
+                           {{-- 🏷️ Kode Klasifikasi --}}
+            <td class="text-center text-sm px-4 py-3 align-middle">
+                {{ $item->warkah->kode_klasifikasi ?? '-' }}
+            </td>
+                        {{-- <td class="px-4 py-4 whitespace-nowrap">
                             <div class="flex flex-col">
-                                <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md">
-                                    <i class="fa-solid fa-hashtag mr-1.5 text-xs"></i>
-                                    {{-- ID warkah, bukan ID peminjaman --}}
-                                    {{ $item->warkah->id ?? '-' }}
-                                </span>
                                 @if($item->warkah)
                                 <span class="text-xs text-gray-500 mt-1 font-medium">
                                     {{ $item->warkah->kode_klasifikasi ?? '-' }}
                                 </span>
                                 @endif
                             </div>
-                        </td>
+                        </td> --}}
 
                         <td class="px-4 py-4 text-sm text-gray-700">
                             <div class="max-w-xs">
@@ -379,9 +397,6 @@ use Illuminate\Support\Str;
                                                 <div class="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
                                                     <div class="flex items-start space-x-3">
                                                         <div class="flex-shrink-0">
-                                                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-blue-600 text-white">
-                                                                #<span x-text="selected.id"></span>
-                                                            </span>
                                                         </div>
                                                         <div class="flex-1 min-w-0">
                                                             <p class="text-sm font-semibold text-gray-900" x-text="selected.uraian_informasi_arsip"></p>
@@ -432,9 +447,6 @@ use Illuminate\Support\Str;
                                                         class="px-4 py-3 hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100 cursor-pointer border-b border-gray-100 transition-all duration-200"
                                                         :class="selected && selected.id === item.id ? 'bg-blue-50 border-l-4 border-l-blue-600' : ''">
                                                         <div class="flex items-start space-x-3">
-                                                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-sm">
-                                                                #<span x-text="item.id"></span>
-                                                            </span>
                                                             <div class="flex-1 min-w-0">
                                                                 <p class="text-sm font-semibold text-gray-900 line-clamp-2" x-text="item.uraian_informasi_arsip"></p>
                                                                 <div class="flex flex-wrap gap-2 mt-1.5">

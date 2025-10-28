@@ -15,7 +15,39 @@ use Illuminate\Support\Str;
         class="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition transform hover:scale-105">
         <i class="fa-solid fa-plus mr-2"></i> Tambah Data
     </a>
+
 </div>
+<div class="mt-6 bg-white shadow-md rounded-lg p-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+        <form action="{{ route('warkah.export') }}" method="GET" class="flex items-center">
+            {{-- Kirim semua filter yang aktif agar export sesuai hasil pencarian --}}
+            <input type="hidden" name="keyword" value="{{ request('keyword') }}">
+            <input type="hidden" name="kurun_waktu_berkas" value="{{ request('kurun_waktu_berkas') }}">
+            <input type="hidden" name="ruang_penyimpanan_rak" value="{{ request('ruang_penyimpanan_rak') }}">
+            <input type="hidden" name="kode_klasifikasi" value="{{ request('kode_klasifikasi') }}">
+            <input type="hidden" name="status" value="{{ request('status') }}">
+
+            <button type="submit"
+                class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm transition">
+                <i class="fas fa-file-excel"></i> Export Excel
+            </button>
+        </form>
+
+        {{-- Bagian Import (tidak diubah) --}}
+        <form action="{{ route('warkah.import') }}" method="POST" enctype="multipart/form-data" class="flex items-center gap-3">
+            @csrf
+            <label class="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md cursor-pointer shadow-sm transition">
+                <i class="fas fa-file-import"></i> Import Excel
+                <input type="file" name="file" accept=".xlsx,.xls" required class="hidden" onchange="this.form.submit()">
+            </label>
+        </form>
+    </div>
+
+    <div class="text-sm text-gray-500 italic">
+        <i class="fas fa-info-circle"></i> Format file harus .xlsx atau .xls
+    </div>
+    </div>
+
 @endsection
 
 @section('content')
@@ -33,7 +65,7 @@ use Illuminate\Support\Str;
                     type="text"
                     name="keyword"
                     value="{{ request('keyword') }}"
-                    placeholder="Cari ID, uraian informasi atau kode klasifikasi..."
+                    placeholder="Cari , uraian informasi atau kode klasifikasi..."
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
             </div>
 
@@ -93,7 +125,6 @@ use Illuminate\Support\Str;
                 <thead class="bg-blue-50 border-b border-gray-200">
                     <tr>
                         <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">No</th>
-                        <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">Kode Warkah</th>
                         <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
                             <i class="fa-solid fa-tag mr-1"></i> Kode Klasifikasi
                         </th>  
@@ -106,6 +137,9 @@ use Illuminate\Support\Str;
                         <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
                             <i class="fa-solid fa-map-pin mr-1"></i> Ruang Penyimpanan / Rak
                         </th>
+                          <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
+            <i class="fa-solid fa-circle-info mr-1"></i> Status
+        </th>
                         <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
                             <i class="fa-solid fa-cog mr-1"></i> Aksi
                         </th>
@@ -117,21 +151,33 @@ use Illuminate\Support\Str;
                         <td class="text-center text-sm font-medium px-4 py-3 align-middle">
                             {{ ($warkah->currentPage() - 1) * $warkah->perPage() + $loop->iteration }}
                         </td>
-                        <td class="text-center text-sm font-medium px-4 py-3 align-middle">
-                            #{{ $item->id }}
+                        <td class="text-center text-sm px-4 py-3 align-middle">
+                            {{ $item->kode_klasifikasi ?? '-' }}
                         </td>
                          <td class="px-6 py-4 text-sm text-gray-600 truncate max-w-xs" title="{{ $item->uraian_informasi_arsip }}">
                             {{ Str::limit($item->uraian_informasi_arsip, 60) ?: '-' }}
                         </td>
                         <td class="text-center text-sm px-4 py-3 align-middle">
-                            {{ $item->kode_klasifikasi ?? '-' }}
+                            {{ $item->kurun_waktu_berkas ?? '-' }}
                         </td>
                         <td class="text-center text-sm px-4 py-3 align-middle">
                             {{ $item->ruang_penyimpanan_rak ?? '-' }}
                         </td>
                         <td class="text-center text-sm px-4 py-3 align-middle">
-                            {{ $item->kurun_waktu_berkas ?? '-' }}
-                        </td>
+    @if($item->status == 'Tersedia')
+        <span class="px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+            {{ $item->status }}
+        </span>
+    @elseif($item->status == 'Dipinjam')
+        <span class="px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
+            {{ $item->status }}
+        </span>
+    @else
+        <span class="px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">
+            {{ $item->status ?? '-' }}
+        </span>
+    @endif
+</td>
 
                         <td class="text-center px-4 py-3 align-middle">
                             <div class="flex justify-center gap-2">
@@ -210,37 +256,6 @@ use Illuminate\Support\Str;
 </div>
 
 {{-- Import / Export Excel --}}
-<div class="mt-6 bg-white shadow-md rounded-lg p-4 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-        <form action="{{ route('warkah.export') }}" method="GET" class="flex items-center">
-            {{-- Kirim semua filter yang aktif agar export sesuai hasil pencarian --}}
-            <input type="hidden" name="keyword" value="{{ request('keyword') }}">
-            <input type="hidden" name="kurun_waktu_berkas" value="{{ request('kurun_waktu_berkas') }}">
-            <input type="hidden" name="ruang_penyimpanan_rak" value="{{ request('ruang_penyimpanan_rak') }}">
-            <input type="hidden" name="kode_klasifikasi" value="{{ request('kode_klasifikasi') }}">
-            <input type="hidden" name="status" value="{{ request('status') }}">
 
-            <button type="submit"
-                class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm transition">
-                <i class="fas fa-file-excel"></i> Export Excel
-            </button>
-        </form>
-
-        {{-- Bagian Import (tidak diubah) --}}
-        <form action="{{ route('warkah.import') }}" method="POST" enctype="multipart/form-data" class="flex items-center gap-3">
-            @csrf
-            <label class="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md cursor-pointer shadow-sm transition">
-                <i class="fas fa-file-import"></i> Import Excel
-                <input type="file" name="file" accept=".xlsx,.xls" required class="hidden" onchange="this.form.submit()">
-            </label>
-        </form>
-    </div>
-
-    <div class="text-sm text-gray-500 italic">
-        <i class="fas fa-info-circle"></i> Format file harus .xlsx atau .xls
-    </div>
-
-
-</div>
 
 @endsection

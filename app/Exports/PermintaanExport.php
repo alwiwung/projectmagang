@@ -11,7 +11,7 @@ class PermintaanExport implements FromCollection, WithHeadings
     public function collection()
     {
         return Permintaan::select(
-            'id',
+            'no_urut',
             'uraian_informasi_arsip',
             'pemohon',
             'instansi',

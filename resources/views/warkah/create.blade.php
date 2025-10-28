@@ -136,7 +136,7 @@
                 <select name="metode_perlindungan"
                     class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-400 focus:ring focus:ring-blue-100 transition">
                     <option value="">-- Pilih --</option>
-                    <option value="Lemari Baja" {{ old('metode_perlindungan') == 'Lemari Baja' ? 'selected' : '' }}>Lemari Baja</option>
+                    <option value="Lemari Baja" {{ old('metode_perlindungan') == 'Lemari Baja' ? 'selected' : '' }}>CCTV</option>
                     <option value="Rak Stainless" {{ old('metode_perlindungan') == 'Rak Stainless' ? 'selected' : '' }}>Rak Stainless</option>
                     <option value="Brankas" {{ old('metode_perlindungan') == 'Brankas' ? 'selected' : '' }}>Brankas</option>
                     <option value="Ruang Ber-AC" {{ old('metode_perlindungan') == 'Ruang Ber-AC' ? 'selected' : '' }}>Ruang Ber-AC</option>
