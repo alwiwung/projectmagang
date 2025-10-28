@@ -58,7 +58,7 @@ Route::prefix('peminjaman')->name('peminjaman.')->group(function () {
     Route::post('/', [PeminjamanController::class, 'store'])->name('store');
     Route::get('/{id}', [PeminjamanController::class, 'show'])->name('show');
 
-Route::post('/{id}/kembalikan', [PeminjamanController::class, 'kembalikan'])->name('peminjaman.kembalikan');
+    Route::post('/{id}/kembalikan', [PeminjamanController::class, 'kembalikan'])->name('peminjaman.kembalikan');
 
 
     Route::get('/api/available-warkah', [PeminjamanController::class, 'getAvailableWarkah'])->name('api.available-warkah');
@@ -85,7 +85,7 @@ Route::prefix('permintaan')->group(function () {
     Route::get('/{id}/download/{type}', [PermintaanController::class, 'downloadFile'])->name('permintaan.downloadFile');
 
 
-  
+
     Route::post('/{id}/dokumen', [PermintaanController::class, 'updateDokumen'])->name('permintaan.updateDokumen');
     Route::get('/{id}/cetak', [PermintaanController::class, 'cetakPDF'])->name('permintaan.cetak');
     Route::patch('/{id}/update-status', [PermintaanController::class, 'updateStatus'])->name('permintaan.updateStatus');
@@ -139,5 +139,3 @@ Route::get('/permintaan/{id}/cetak', [PermintaanController::class, 'cetakPDF'])-
 */
 Route::get('/api/warkah/search', [PermintaanController::class, 'searchWarkah'])->name('warkah.search');
 Route::get('/warkah/{id}', [PermintaanController::class, 'getWarkahDetail'])->name('warkah.detail');
-
-

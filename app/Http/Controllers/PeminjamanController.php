@@ -149,22 +149,20 @@ class PeminjamanController extends Controller
         // Ambil hanya warkah yang statusnya benar-benar "Tersedia"
         $query = Warkah::where('status', 'Tersedia');
 
-        // ✨ Tambahkan filter pencarian dengan normalisasi jika ada input
-        if ($search) {
-            // Normalisasi keyword dengan menghapus spasi
-            $normalizedSearch = preg_replace('/\s+/', '', $search);
-            
-            $query->where(function ($q) use ($normalizedSearch) {
-                $q->whereRaw("REPLACE(REPLACE(kode_klasifikasi, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedSearch}%"])
-                    ->orWhereRaw("REPLACE(REPLACE(uraian_informasi_arsip, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedSearch}%"])
-                    ->orWhereRaw("REPLACE(REPLACE(ruang_penyimpanan_rak, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedSearch}%"])
-                    ->orWhereRaw("REPLACE(REPLACE(nomor_item_arsip, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedSearch}%"])
-                    ->orWhereRaw("REPLACE(REPLACE(kurun_waktu_berkas, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedSearch}%"])
-                    ->orWhereRaw("REPLACE(REPLACE(lokasi, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedSearch}%"])
-                    ->orWhereRaw("REPLACE(REPLACE(no_boks_definitif, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedSearch}%"])
-                    ->orWhereRaw("REPLACE(REPLACE(no_folder, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedSearch}%"]);
-            });
-        }
+    // Tambahkan filter pencarian jika ada input
+    if ($search) {
+        $query->where(function ($q) use ($search) {
+            $q->where('id', 'LIKE', "%{$search}%")
+                ->orWhere('kode_klasifikasi', 'LIKE', "%{$search}%")
+                ->orWhere('uraian_informasi_arsip', 'LIKE', "%{$search}%")
+                ->orWhere('ruang_penyimpanan_rak', 'LIKE', "%{$search}%")
+                ->orWhere('nomor_item_arsip', 'LIKE', "%{$search}%")
+                ->orWhere('kurun_waktu_berkas', 'LIKE', "%{$search}%")
+                ->orWhere('lokasi', 'LIKE', "%{$search}%")
+                ->orWhere('no_boks_definitif', 'LIKE', "%{$search}%")
+                ->orWhere('no_folder', 'LIKE', "%{$search}%");
+        });
+    }
 
         $warkah = $query->select(
             'id',

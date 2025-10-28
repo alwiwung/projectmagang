@@ -81,10 +81,10 @@
     </div>
     <table class="w-full text-sm text-gray-700">
         <tbody>
-            {{-- <tr class="hover:bg-blue-50 transition">
+            <tr class="hover:bg-blue-50 transition">
                 <td class="p-3 font-semibold w-1/3 border-b border-gray-200">Nomor Item Arsip</td>
                 <td class="p-3 border-b border-gray-200">{{ $peminjaman->warkah->nomor_item_arsip ?? '-' }}</td>
-            </tr> --}}
+            </tr>
             <tr class="hover:bg-blue-50 transition">
                 <td class="p-3 font-semibold border-b border-gray-200">Kode Klasifikasi</td>
                 <td class="p-3 border-b border-gray-200">{{ $peminjaman->warkah->kode_klasifikasi ?? '-' }}</td>
@@ -97,10 +97,10 @@
                 <td class="p-3 font-semibold border-b border-gray-200">Uraian Informasi Arsip</td>
                 <td class="p-3 border-b border-gray-200">{{ $peminjaman->warkah->uraian_informasi_arsip ?? '-' }}</td>
             </tr>
-            {{-- <tr class="hover:bg-blue-50 transition">
+            <tr class="hover:bg-blue-50 transition">
                 <td class="p-3 font-semibold border-b border-gray-200">Lokasi Penyimpanan</td>
                 <td class="p-3 border-b border-gray-200">{{ $peminjaman->warkah->lokasi ?? '-' }}</td>
-            </tr> --}}
+            </tr>
             <tr class="hover:bg-blue-50 transition">
                 <td class="p-3 font-semibold">Ruang Penyimpanan / Rak</td>
                 <td class="p-3">{{ $peminjaman->warkah->ruang_penyimpanan_rak ?? '-' }}</td>
@@ -113,74 +113,74 @@
         {{-- STATUS INFORMASI --}}
         <div class="mt-10">
             @if ($peminjaman->status == 'Dikembalikan')
-                <div class="bg-gradient-to-r from-green-50 via-white to-green-50 border-l-4 border-green-600 shadow-md p-5 rounded-xl">
-                    <div class="flex items-center mb-3">
-                        <i class="fa-solid fa-circle-check text-green-600 text-xl mr-2"></i>
-                        <h5 class="text-lg font-semibold text-green-700">Warkah Telah Dikembalikan</h5>
-                    </div>
-                    <p class="text-gray-700 text-sm mb-4">
-                        Warkah ini telah dikembalikan pada
-                        <strong>{{ \Carbon\Carbon::parse($peminjaman->tanggal_kembali)->format('d M Y') }}</strong>.
-                    </p>
+            <div class="bg-gradient-to-r from-green-50 via-white to-green-50 border-l-4 border-green-600 shadow-md p-5 rounded-xl">
+                <div class="flex items-center mb-3">
+                    <i class="fa-solid fa-circle-check text-green-600 text-xl mr-2"></i>
+                    <h5 class="text-lg font-semibold text-green-700">Warkah Telah Dikembalikan</h5>
+                </div>
+                <p class="text-gray-700 text-sm mb-4">
+                    Warkah ini telah dikembalikan pada
+                    <strong>{{ \Carbon\Carbon::parse($peminjaman->tanggal_kembali)->format('d M Y') }}</strong>.
+                </p>
 
-                    <!-- DETAIL PENGEMBALIAN -->
-                    <div class="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl p-4 shadow-sm">
-                        <table class="w-full text-sm text-gray-700">
-                            <tbody>
-                                <tr class="hover:bg-green-50 transition">
-                                    <td class="p-3 font-semibold w-1/3 border-b border-gray-200">Kondisi</td>
-                                    <td class="p-3 border-b border-gray-200">
-                                        <span class="@if($peminjaman->kondisi == 'Baik') text-green-600 
+                <!-- DETAIL PENGEMBALIAN -->
+                <div class="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl p-4 shadow-sm">
+                    <table class="w-full text-sm text-gray-700">
+                        <tbody>
+                            <tr class="hover:bg-green-50 transition">
+                                <td class="p-3 font-semibold w-1/3 border-b border-gray-200">Kondisi</td>
+                                <td class="p-3 border-b border-gray-200">
+                                    <span class="@if($peminjaman->kondisi == 'Baik') text-green-600 
                                                      @elseif($peminjaman->kondisi == 'Rusak') text-yellow-600 
                                                      @else text-red-600 @endif font-bold">
-                                            {{ $peminjaman->kondisi }}
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-green-50 transition">
-                                    <td class="p-3 font-semibold border-b border-gray-200">Catatan</td>
-                                    <td class="p-3 border-b border-gray-200">{{ $peminjaman->catatan ?? '-' }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                        {{ $peminjaman->kondisi }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-green-50 transition">
+                                <td class="p-3 font-semibold border-b border-gray-200">Catatan</td>
+                                <td class="p-3 border-b border-gray-200">{{ $peminjaman->catatan ?? '-' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
 
-                        @if ($peminjaman->bukti)
-                            <div class="mt-4">
-                                <h6 class="font-semibold text-gray-700 mb-2">Bukti Pengembalian:</h6>
-                                <a href="{{ asset('storage/' . $peminjaman->bukti) }}" target="_blank">
-                                    <img src="{{ asset('storage/' . $peminjaman->bukti) }}" 
-                                         alt="Bukti Pengembalian" 
-                                         class="rounded-lg shadow-lg border hover:scale-105 transition-transform max-h-72 mx-auto">
-                                </a>
-                            </div>
-                        @endif
+                    @if ($peminjaman->bukti)
+                    <div class="mt-4">
+                        <h6 class="font-semibold text-gray-700 mb-2">Bukti Pengembalian:</h6>
+                        <a href="{{ asset('storage/' . $peminjaman->bukti) }}" target="_blank">
+                            <img src="{{ asset('storage/' . $peminjaman->bukti) }}"
+                                alt="Bukti Pengembalian"
+                                class="rounded-lg shadow-lg border hover:scale-105 transition-transform max-h-72 mx-auto">
+                        </a>
                     </div>
+                    @endif
                 </div>
+            </div>
 
             @elseif ($peminjaman->status == 'Terlambat')
-                <div class="bg-gradient-to-r from-red-50 via-white to-red-50 border-l-4 border-red-600 shadow-md p-5 rounded-xl">
-                    <div class="flex items-center mb-2">
-                        <i class="fa-solid fa-triangle-exclamation text-red-600 text-xl mr-2"></i>
-                        <h5 class="text-lg font-semibold text-red-700">Terlambat Dikembalikan</h5>
-                    </div>
-                    <p class="text-gray-700 text-sm">
-                        Pengembalian melewati batas waktu 
-                        <strong>{{ \Carbon\Carbon::parse($peminjaman->batas_peminjaman)->format('d M Y') }}</strong>.
-                    </p>
+            <div class="bg-gradient-to-r from-red-50 via-white to-red-50 border-l-4 border-red-600 shadow-md p-5 rounded-xl">
+                <div class="flex items-center mb-2">
+                    <i class="fa-solid fa-triangle-exclamation text-red-600 text-xl mr-2"></i>
+                    <h5 class="text-lg font-semibold text-red-700">Terlambat Dikembalikan</h5>
                 </div>
+                <p class="text-gray-700 text-sm">
+                    Pengembalian melewati batas waktu
+                    <strong>{{ \Carbon\Carbon::parse($peminjaman->batas_peminjaman)->format('d M Y') }}</strong>.
+                </p>
+            </div>
 
             @else
-                <div class="bg-gradient-to-r from-yellow-50 via-white to-yellow-50 border-l-4 border-yellow-600 shadow-md p-5 rounded-xl">
-                    <div class="flex items-center mb-2">
-                        <i class="fa-solid fa-clock text-yellow-600 text-xl mr-2"></i>
-                        <h5 class="text-lg font-semibold text-yellow-700">Masih Dipinjam</h5>
-                    </div>
-                    <p class="text-gray-700 text-sm">
-                        Warkah ini masih dalam status <strong>{{ $peminjaman->status }}</strong>.  
-                        Harap dikembalikan sebelum 
-                        <strong>{{ \Carbon\Carbon::parse($peminjaman->batas_peminjaman)->format('d M Y') }}</strong>.
-                    </p>
+            <div class="bg-gradient-to-r from-yellow-50 via-white to-yellow-50 border-l-4 border-yellow-600 shadow-md p-5 rounded-xl">
+                <div class="flex items-center mb-2">
+                    <i class="fa-solid fa-clock text-yellow-600 text-xl mr-2"></i>
+                    <h5 class="text-lg font-semibold text-yellow-700">Masih Dipinjam</h5>
                 </div>
+                <p class="text-gray-700 text-sm">
+                    Warkah ini masih dalam status <strong>{{ $peminjaman->status }}</strong>.
+                    Harap dikembalikan sebelum
+                    <strong>{{ \Carbon\Carbon::parse($peminjaman->batas_peminjaman)->format('d M Y') }}</strong>.
+                </p>
+            </div>
             @endif
         </div>
 
