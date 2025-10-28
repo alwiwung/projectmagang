@@ -240,11 +240,11 @@
     <div class="container">
         <div class="left-section">
             <h1>SELAMAT DATANG</h1>
-            <h2>DI WARKAH PINTAR</h2>
-            <p class="subtitle">Warkah Pintar, Solusi Arsip Modern di Ujung Jari Anda</p>
+            <h2>DI WARKAHKU</h2>
+            <p class="subtitle">Warkahku, Solusi Arsip Modern di Ujung Jari Anda</p>
             
             {{-- Tombol Login --}}
-            <a href="#" class="btn-masuk">masuk</a>
+            <a href="warkah" class="btn-masuk">masuk</a>
         </div>
 
         <div class="right-section">
