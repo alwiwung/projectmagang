@@ -49,7 +49,18 @@
   </a>
   <a href="{{ route('permintaan.index') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition flex items-center">
     <i class="fa-solid fa-copy mr-2"></i> Permintaan Salinan
+    
   </a>
+  @auth
+<form action="{{ route('logout') }}" method="POST" class="hidden md:inline">
+    @csrf
+    <button type="submit"
+        class="flex items-center px-3 py-2 text-sm rounded-md hover:bg-blue-700 transition">
+        <i class="fa-solid fa-right-from-bracket mr-2"></i> Logout
+    </button>
+</form>
+@endauth
+
 </div>
 
 
@@ -176,6 +187,9 @@
             </div>
         </div>
     </footer>
+
+
+    
     {{--
     <!-- 🌙 Floating Dark Mode Toggle -->
     <button 
