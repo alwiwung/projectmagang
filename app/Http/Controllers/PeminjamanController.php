@@ -30,10 +30,10 @@ class PeminjamanController extends Controller
         // 🔸 Filter pencarian dengan normalisasi
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
-            
+
             // ✨ Normalisasi keyword dengan menghapus spasi
             $normalizedSearch = preg_replace('/\s+/', '', $search);
-            
+
             $query->where(function ($q) use ($search, $normalizedSearch) {
                 // Pencarian biasa tanpa normalisasi untuk nama, email, no_hp
                 $q->where('nama_peminjam', 'like', '%' . $search . '%')
@@ -84,7 +84,7 @@ class PeminjamanController extends Controller
         if ($warkah->isDipinjam()) {
             return back()->withErrors(['id_warkah' => 'Warkah ini sedang dipinjam oleh orang lain']);
         }
-        
+
         $validated['id_warkah'] = $request->id_warkah;
         PeminjamanWarkah::create($validated);
         $warkah->update(['status' => 'Dipinjam']);
@@ -149,20 +149,20 @@ class PeminjamanController extends Controller
         // Ambil hanya warkah yang statusnya benar-benar "Tersedia"
         $query = Warkah::where('status', 'Tersedia');
 
-    // Tambahkan filter pencarian jika ada input
-    if ($search) {
-        $query->where(function ($q) use ($search) {
-            $q->where('id', 'LIKE', "%{$search}%")
-                ->orWhere('kode_klasifikasi', 'LIKE', "%{$search}%")
-                ->orWhere('uraian_informasi_arsip', 'LIKE', "%{$search}%")
-                ->orWhere('ruang_penyimpanan_rak', 'LIKE', "%{$search}%")
-                ->orWhere('nomor_item_arsip', 'LIKE', "%{$search}%")
-                ->orWhere('kurun_waktu_berkas', 'LIKE', "%{$search}%")
-                ->orWhere('lokasi', 'LIKE', "%{$search}%")
-                ->orWhere('no_boks_definitif', 'LIKE', "%{$search}%")
-                ->orWhere('no_folder', 'LIKE', "%{$search}%");
-        });
-    }
+        // Tambahkan filter pencarian jika ada input
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('id', 'LIKE', "%{$search}%")
+                    ->orWhere('kode_klasifikasi', 'LIKE', "%{$search}%")
+                    ->orWhere('uraian_informasi_arsip', 'LIKE', "%{$search}%")
+                    ->orWhere('ruang_penyimpanan_rak', 'LIKE', "%{$search}%")
+                    ->orWhere('nomor_item_arsip', 'LIKE', "%{$search}%")
+                    ->orWhere('kurun_waktu_berkas', 'LIKE', "%{$search}%")
+                    ->orWhere('lokasi', 'LIKE', "%{$search}%")
+                    ->orWhere('no_boks_definitif', 'LIKE', "%{$search}%")
+                    ->orWhere('no_folder', 'LIKE', "%{$search}%");
+            });
+        }
 
         $warkah = $query->select(
             'id',

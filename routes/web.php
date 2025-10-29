@@ -25,6 +25,7 @@ Route::get('/home', function () {
     return redirect()->route('login');
 });
 
+<<<<<<< HEAD
 // Authentication Routes
 Route::middleware('guest')->group(function () {
     // Login
@@ -38,6 +39,22 @@ Route::middleware('guest')->group(function () {
     // Password Reset (jika sudah ada)
     // Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
     // Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+=======
+/*
+|--------------------------------------------------------------------------
+| Peminjaman
+|--------------------------------------------------------------------------
+*/
+Route::prefix('peminjaman')->name('peminjaman.')->group(function () {
+    Route::get('/', [PeminjamanController::class, 'index'])->name('index');
+    Route::post('/', [PeminjamanController::class, 'store'])->name('store');
+    Route::get('/{id}', [PeminjamanController::class, 'show'])->name('show');
+
+    Route::post('/{id}/kembalikan', [PeminjamanController::class, 'kembalikan'])->name('peminjaman.kembalikan');
+
+
+    Route::get('/api/available-warkah', [PeminjamanController::class, 'getAvailableWarkah'])->name('api.available-warkah');
+>>>>>>> ffe2494 (menyimpan perubahan sebelum pull)
 });
 
 // Logout (perlu login)
@@ -92,6 +109,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/api/available-warkah', [PeminjamanController::class, 'getAvailableWarkah'])->name('api.available-warkah');
     });
 
+<<<<<<< HEAD
     /*
     |--------------------------------------------------------------------------
     | Permintaan Salinan Warkah
@@ -101,6 +119,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [PermintaanController::class, 'index'])->name('index');
         Route::get('/create', [PermintaanController::class, 'create'])->name('create');
         Route::post('/', [PermintaanController::class, 'store'])->name('store');
+=======
+
+    Route::post('/{id}/dokumen', [PermintaanController::class, 'updateDokumen'])->name('permintaan.updateDokumen');
+    Route::get('/{id}/cetak', [PermintaanController::class, 'cetakPDF'])->name('permintaan.cetak');
+    Route::patch('/{id}/update-status', [PermintaanController::class, 'updateStatus'])->name('permintaan.updateStatus');
+>>>>>>> ffe2494 (menyimpan perubahan sebelum pull)
 
         // File routes
         Route::get('/{id}/file/{type}', [PermintaanController::class, 'lihatFile'])->name('lihatFile');
@@ -120,6 +144,7 @@ Route::middleware('auth')->group(function () {
                 abort(404, 'File tidak ditemukan');
             }
 
+<<<<<<< HEAD
             $path = storage_path('app/public/' . $filePath);
 
             if (!file_exists($path)) {
@@ -150,3 +175,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/warkah/{id}', [PermintaanController::class, 'getWarkahDetail'])->name('warkah.detail');
     
 });
+=======
+// Route khusus untuk cetak PDF (letakkan SEBELUM resource route atau gunakan nama berbeda)
+Route::get('/permintaan/{id}/cetak', [PermintaanController::class, 'cetakPDF'])->name('permintaan.cetak');
+/*
+|--------------------------------------------------------------------------
+| API (Warkah)
+|--------------------------------------------------------------------------
+*/
+Route::get('/api/warkah/search', [PermintaanController::class, 'searchWarkah'])->name('warkah.search');
+Route::get('/warkah/{id}', [PermintaanController::class, 'getWarkahDetail'])->name('warkah.detail');
+
+
+Route::get('/peminjaman/{id}/whatsapp-message', [PeminjamanController::class, 'generateWhatsAppMessage'])
+    ->name('peminjaman.whatsapp-message');
+>>>>>>> ffe2494 (menyimpan perubahan sebelum pull)

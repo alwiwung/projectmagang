@@ -75,39 +75,39 @@
         </div>
 
         {{-- INFORMASI WARKAH --}}
-<div class="mt-10 bg-gradient-to-br from-blue-50 via-white to-blue-50 rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-    <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2 text-white font-semibold text-sm">
-        <i class="fa-solid fa-file-lines mr-2"></i> Informasi Warkah
-    </div>
-    <table class="w-full text-sm text-gray-700">
-        <tbody>
-            <tr class="hover:bg-blue-50 transition">
-                <td class="p-3 font-semibold w-1/3 border-b border-gray-200">Nomor Item Arsip</td>
-                <td class="p-3 border-b border-gray-200">{{ $peminjaman->warkah->nomor_item_arsip ?? '-' }}</td>
-            </tr>
-            <tr class="hover:bg-blue-50 transition">
-                <td class="p-3 font-semibold border-b border-gray-200">Kode Klasifikasi</td>
-                <td class="p-3 border-b border-gray-200">{{ $peminjaman->warkah->kode_klasifikasi ?? '-' }}</td>
-            </tr>
-            <tr class="hover:bg-blue-50 transition">
-                <td class="p-3 font-semibold border-b border-gray-200">Kurun Waktu Berkas</td>
-                <td class="p-3 border-b border-gray-200">{{ $peminjaman->warkah->kurun_waktu_berkas ?? '-' }}</td>
-            </tr>
-            <tr class="hover:bg-blue-50 transition">
-                <td class="p-3 font-semibold border-b border-gray-200">Uraian Informasi Arsip</td>
-                <td class="p-3 border-b border-gray-200">{{ $peminjaman->warkah->uraian_informasi_arsip ?? '-' }}</td>
-            </tr>
-            <tr class="hover:bg-blue-50 transition">
-                <td class="p-3 font-semibold border-b border-gray-200">Lokasi Penyimpanan</td>
-                <td class="p-3 border-b border-gray-200">{{ $peminjaman->warkah->lokasi ?? '-' }}</td>
-            </tr>
-            <tr class="hover:bg-blue-50 transition">
-                <td class="p-3 font-semibold">Ruang Penyimpanan / Rak</td>
-                <td class="p-3">{{ $peminjaman->warkah->ruang_penyimpanan_rak ?? '-' }}</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+        <div class="mt-10 bg-gradient-to-br from-blue-50 via-white to-blue-50 rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2 text-white font-semibold text-sm">
+                <i class="fa-solid fa-file-lines mr-2"></i> Informasi Warkah
+            </div>
+            <table class="w-full text-sm text-gray-700">
+                <tbody>
+                    <tr class="hover:bg-blue-50 transition">
+                        <td class="p-3 font-semibold w-1/3 border-b border-gray-200">Nomor Item Arsip</td>
+                        <td class="p-3 border-b border-gray-200">{{ $peminjaman->warkah->nomor_item_arsip ?? '-' }}</td>
+                    </tr>
+                    <tr class="hover:bg-blue-50 transition">
+                        <td class="p-3 font-semibold border-b border-gray-200">Kode Klasifikasi</td>
+                        <td class="p-3 border-b border-gray-200">{{ $peminjaman->warkah->kode_klasifikasi ?? '-' }}</td>
+                    </tr>
+                    <tr class="hover:bg-blue-50 transition">
+                        <td class="p-3 font-semibold border-b border-gray-200">Kurun Waktu Berkas</td>
+                        <td class="p-3 border-b border-gray-200">{{ $peminjaman->warkah->kurun_waktu_berkas ?? '-' }}</td>
+                    </tr>
+                    <tr class="hover:bg-blue-50 transition">
+                        <td class="p-3 font-semibold border-b border-gray-200">Uraian Informasi Arsip</td>
+                        <td class="p-3 border-b border-gray-200">{{ $peminjaman->warkah->uraian_informasi_arsip ?? '-' }}</td>
+                    </tr>
+                    <tr class="hover:bg-blue-50 transition">
+                        <td class="p-3 font-semibold border-b border-gray-200">Lokasi Penyimpanan</td>
+                        <td class="p-3 border-b border-gray-200">{{ $peminjaman->warkah->lokasi ?? '-' }}</td>
+                    </tr>
+                    <tr class="hover:bg-blue-50 transition">
+                        <td class="p-3 font-semibold">Ruang Penyimpanan / Rak</td>
+                        <td class="p-3">{{ $peminjaman->warkah->ruang_penyimpanan_rak ?? '-' }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
 
         {{-- STATUS INFORMASI --}}
