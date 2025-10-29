@@ -279,7 +279,7 @@
     <div class="left-side">
         <div class="illustration-wrapper">
             <img 
-                src="{{ asset('image/Login.png') }}" 
+                src="{{ asset('image/Login1.jpg') }}" 
                 alt="Welcome Illustration">
         </div>
     </div>
