@@ -153,7 +153,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/warkah/{id}', [PermintaanController::class, 'getWarkahDetail'])->name('warkah.detail');
     
 
-<<<<<<< HEAD
+
   
    // Pastikan route ini ada
     Route::get('/{id}/file/{type}', [PermintaanController::class, 'lihatFile'])
@@ -215,7 +215,5 @@ Route::get('/permintaan/{id}/cetak', [PermintaanController::class, 'cetakPDF'])-
 */
 Route::get('/api/warkah/search', [PermintaanController::class, 'searchWarkah'])->name('warkah.search');
 Route::get('/warkah/{id}', [PermintaanController::class, 'getWarkahDetail'])->name('warkah.detail');
-=======
 
-});
->>>>>>> dc83a51 (fitur login)
+
