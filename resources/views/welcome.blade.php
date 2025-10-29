@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Warkah Pintar - Solusi Arsip Modern</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -14,7 +15,7 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Poppins', 'Segoe UI', sans-serif;
             overflow-x: hidden;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
@@ -102,27 +103,61 @@
             background: linear-gradient(135deg, #1e5bb8 0%, #0d47a1 100%);
             color: white;
             border: none;
-            padding: 20px 60px;
-            font-size: 1.5rem;
+            padding: 22px 70px;
+            font-size: 1.6rem;
             font-weight: 700;
-            border-radius: 50px;
+            border-radius: 60px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(30, 91, 184, 0.3);
-            text-transform: lowercase;
-            letter-spacing: 1px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 12px 35px rgba(30, 91, 184, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 3px;
             display: inline-block;
             text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-masuk::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.6s;
+        }
+
+        .btn-masuk:hover::before {
+            left: 100%;
         }
 
         .btn-masuk:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(30, 91, 184, 0.5);
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 20px 50px rgba(30, 91, 184, 0.6);
             background: linear-gradient(135deg, #0d47a1 0%, #1e5bb8 100%);
         }
 
         .btn-masuk:active {
-            transform: translateY(-2px);
+            transform: translateY(-4px) scale(1.02);
+        }
+
+        /* Icon di dalam button */
+        .btn-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-icon i {
+            font-size: 1.4rem;
+            animation: arrowMove 1.5s ease-in-out infinite;
+        }
+
+        @keyframes arrowMove {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(5px); }
         }
 
         .decorative-circles {
@@ -173,6 +208,18 @@
             }
         }
 
+        /* Shine effect */
+        .btn-masuk {
+            background: linear-gradient(135deg, #1e5bb8 0%, #0d47a1 100%);
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
         @media (max-width: 1024px) {
             .container {
                 flex-direction: column;
@@ -201,6 +248,11 @@
                 font-size: 1.1rem;
             }
 
+            .btn-masuk {
+                padding: 18px 50px;
+                font-size: 1.3rem;
+            }
+
             .logo {
                 width: 200px;
                 height: 200px;
@@ -227,6 +279,7 @@
             .btn-masuk {
                 padding: 15px 40px;
                 font-size: 1.2rem;
+                letter-spacing: 2px;
             }
 
             .logo {
@@ -235,6 +288,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
@@ -244,7 +298,12 @@
             <p class="subtitle">Warkahku, Solusi Arsip Modern di Ujung Jari Anda</p>
             
             {{-- Tombol Login --}}
-            <a href="warkah" class="btn-masuk">masuk</a>
+            <a href="{{ route('login') }}" class="btn-masuk">
+                <span class="btn-icon">
+                    <span>MASUK</span>
+                    <i class="fas fa-arrow-right"></i>
+                </span>
+            </a>
         </div>
 
         <div class="right-section">
@@ -272,4 +331,4 @@
         });
     </script>
 </body>
-</html 
+</html>

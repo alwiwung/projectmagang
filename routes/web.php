@@ -12,12 +12,9 @@ use App\Http\Controllers\Auth\LoginController;
 |--------------------------------------------------------------------------
 */
 
-// Redirect root ke login jika belum login, ke warkah jika sudah login
+// Redirect root ke welcome blade
 Route::get('/', function () {
-    if (auth()->check()) {
-        return redirect()->route('warkah.index');
-    }
-    return redirect()->route('login');
+    return view('welcome');
 })->name('home');
 
 // Route /home (alias untuk root)
@@ -152,70 +149,4 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/warkah/search', [PermintaanController::class, 'searchWarkah'])->name('warkah.search');
     Route::get('/warkah/{id}', [PermintaanController::class, 'getWarkahDetail'])->name('warkah.detail');
     
-
-<<<<<<< HEAD
-  
-   // Pastikan route ini ada
-    Route::get('/{id}/file/{type}', [PermintaanController::class, 'lihatFile'])
-    ->name('permintaan.lihatFile');
-    Route::get('/{id}/download/{type}', [PermintaanController::class, 'downloadFile'])->name('permintaan.downloadFile');
-
-
-
-    Route::post('/{id}/dokumen', [PermintaanController::class, 'updateDokumen'])->name('permintaan.updateDokumen');
-    Route::get('/{id}/cetak', [PermintaanController::class, 'cetakPDF'])->name('permintaan.cetak');
-    Route::patch('/{id}/update-status', [PermintaanController::class, 'updateStatus'])->name('permintaan.updateStatus');
-
-
-    // 👇 show dan delete di bagian bawah supaya tidak konflik dengan rute file
-    Route::get('/{id}', [PermintaanController::class, 'show'])->name('permintaan.show');
-    Route::delete('/{id}', [PermintaanController::class, 'destroy'])->name('permintaan.destroy');
 });
-
-// Pastikan route ini ada
-    Route::get('/permintaan/{id}/file/{type}', [PermintaanController::class, 'lihatFile'])
-    ->name('permintaan.lihatFile');
-    Route::get('/permintaan/{id}/download/{type}', [PermintaanController::class, 'downloadFile'])->name('permintaan.downloadFile');
-
-// Route untuk get file content (untuk mammoth.js)
-// Route untuk get file content (untuk mammoth.js)
-Route::get('/permintaan/{id}/file-content/{type}', function($id, $type) {
-    $permintaan = \App\Models\Permintaan::findOrFail($id);
-    
-    // PENTING: Pastikan parameter $type diteruskan dengan benar
-    if ($type === 'nota') {
-        $filePath = $permintaan->nota_dinas_masuk_file;
-    } elseif ($type === 'disposisi') {
-        $filePath = $permintaan->file_disposisi;
-    } else {
-        abort(404, 'Tipe file tidak valid');
-    }
-    
-    if (empty($filePath)) {
-        abort(404, 'File tidak ditemukan');
-    }
-    
-    $path = storage_path('app/public/' . $filePath);
-    
-    if (!file_exists($path)) {
-        abort(404, 'File tidak ditemukan di server');
-    }
-    
-    return response()->file($path, [
-        'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    ]);
-})->name('permintaan.getFileContent');
-
-// Route khusus untuk cetak PDF (letakkan SEBELUM resource route atau gunakan nama berbeda)
-Route::get('/permintaan/{id}/cetak', [PermintaanController::class, 'cetakPDF'])->name('permintaan.cetak');
-/*
-|--------------------------------------------------------------------------
-| API (Warkah)
-|--------------------------------------------------------------------------
-*/
-Route::get('/api/warkah/search', [PermintaanController::class, 'searchWarkah'])->name('warkah.search');
-Route::get('/warkah/{id}', [PermintaanController::class, 'getWarkahDetail'])->name('warkah.detail');
-=======
-
-});
->>>>>>> dc83a51 (fitur login)
