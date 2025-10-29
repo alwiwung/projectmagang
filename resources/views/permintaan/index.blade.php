@@ -9,16 +9,14 @@
         <div class="mb-8">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <div class="flex items-center gap-3 mb-2">
-                        <div class="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
-                            <i class="fa-solid fa-folder-open text-white text-2xl"></i>
-                        </div>
-                        <div>
-                            <h1 class="text-3xl font-bold text-gray-800">Daftar Permintaan Salinan Arsip</h1>
-                            <p class="text-gray-500 text-sm mt-1">Kelola dan pantau semua permintaan salinan warkah</p>
-                        </div>
+                    <div class="mb-2">
+                        <h1 class="text-3xl font-bold text-gray-800">Daftar Permintaan Salinan Arsip</h1>
+                        <p class="text-gray-500 text-sm mt-1">
+                            Kelola dan pantau semua permintaan salinan warkah
+                        </p>
                     </div>
                 </div>
+
                 <a href="{{ route('permintaan.create') }}"
                     class="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 transform hover:-translate-y-0.5">
                     <i class="fa-solid fa-plus mr-2"></i> Tambah Permintaan
@@ -26,7 +24,8 @@
             </div>
         </div>
 
-        {{-- Notifikasi --}}
+
+        <!-- {{-- Notifikasi --}}
         @if (session('success'))
         <div class="mb-6 p-4 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 shadow-sm">
             <div class="flex items-center gap-3">
@@ -34,7 +33,7 @@
                 <span class="text-green-700 font-medium">{{ session('success') }}</span>
             </div>
         </div>
-        @endif
+        @endif -->
 
         {{-- Filter & Search Section --}}
         <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-6">

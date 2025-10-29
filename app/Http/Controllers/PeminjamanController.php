@@ -62,9 +62,17 @@ class PeminjamanController extends Controller
                 ELSE 4 
             END")
             ->orderBy('created_at', 'desc')
-            ->paginate(10);
-
-        return view('peminjaman.index', compact('peminjaman'));
+            ->paginate(50);
+        // Statistik untuk card
+        $totalDipinjam = PeminjamanWarkah::where('status', 'Dipinjam')->count();
+        $totalTerlambat = PeminjamanWarkah::where('status', 'Terlambat')->count();
+        $totalDikembalikan = PeminjamanWarkah::where('status', 'Dikembalikan')->count();
+        return view('peminjaman.index', compact(
+            'peminjaman',
+            'totalDipinjam',      // ← TAMBAHKAN INI
+            'totalTerlambat',     // ← TAMBAHKAN INI
+            'totalDikembalikan'   // ← TAMBAHKAN INI
+        ));
     }
 
     /** 🔹 Simpan data peminjaman baru */
@@ -76,7 +84,7 @@ class PeminjamanController extends Controller
             'email' => 'required|email|max:255',
             'tanggal_pinjam' => 'required|date',
             'tujuan_pinjam' => 'required|string',
-            'batas_peminjaman' => 'required|date|after:tanggal_pinjam',
+            'batas_peminjaman' => 'required|date',
         ]);
 
         $warkah = Warkah::find($request->id_warkah);

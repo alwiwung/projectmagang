@@ -3,14 +3,14 @@
 use Illuminate\Support\Str;
 @endphp
 
-@section('title', 'Peminjaman Barang')
+@section('title', 'Peminjaman & Pengembalian Warkah')
 
 @section('content')
 <div x-data="peminjamanApp()" class="space-y-6">
     <!-- Header Section -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Peminjaman Barang</h1>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Peminjaman & Pengembalian Warkah</h1>
             <p class="mt-1 text-sm text-gray-600">Kelola data peminjaman dan pengembalian warkah</p>
         </div>
     </div>
@@ -74,19 +74,67 @@ use Illuminate\Support\Str;
         </div>
     </div>
 
+    <!-- TAMBAHKAN SETELAH ACTION BAR (setelah closing </div> dari Action Bar) -->
+    <!-- SEBELUM DATA TABLE -->
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Total Dipinjam -->
+        <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium opacity-90">Total Dipinjam</p>
+                    <h3 class="text-3xl font-bold mt-2">{{ $totalDipinjam ?? 0 }}</h3>
+                    <p class="text-xs opacity-75 mt-1">Warkah sedang dipinjam</p>
+                </div>
+                <div class="bg-white bg-opacity-20 rounded-full p-3">
+                    <i class="fas fa-clock text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Terlambat -->
+        <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium opacity-90">Total Terlambat</p>
+                    <h3 class="text-3xl font-bold mt-2">{{ $totalTerlambat ?? 0 }}</h3>
+                    <p class="text-xs opacity-75 mt-1">Melewati batas waktu</p>
+                </div>
+                <div class="bg-white bg-opacity-20 rounded-full p-3 animate-pulse">
+                    <i class="fas fa-exclamation-triangle text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Dikembalikan -->
+        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium opacity-90">Total Dikembalikan</p>
+                    <h3 class="text-3xl font-bold mt-2">{{ $totalDikembalikan ?? 0 }}</h3>
+                    <p class="text-xs opacity-75 mt-1">Sudah dikembalikan</p>
+                </div>
+                <div class="bg-white bg-opacity-20 rounded-full p-3">
+                    <i class="fas fa-check-circle text-2xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Data Table -->
     <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-xl border border-gray-200 overflow-hidden transform transition-all duration-300 hover:shadow-2xl">
         <!-- Table Header -->
         <div class="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 px-6 py-4">
             <h2 class="text-lg font-bold text-white flex items-center">
                 <i class="fa-solid fa-table mr-2"></i>
-                Data Peminjaman Barang
+                Data Peminjaman & Pengembalian Warkah
             </h2>
         </div>
 
-        <div class="max-h-[400px] overflow-y-auto overflow-x-hidden rounded-b-xl shadow-inner">
+        <div class="rounded-b-xl">
             <table class="w-full table-auto divide-y divide-gray-200">
-                <thead class="bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50 sticky top-0 z-10">
+                <thead class="bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50">
                     <tr>
                         <th class="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-500">
                             No
@@ -272,7 +320,7 @@ use Illuminate\Support\Str;
 @endif
 </div>
 
-<!-- Detail Section -->
+<!-- Detail Section
 <div class="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-lg border-2 border-blue-200 p-6 transform transition-all duration-300 hover:shadow-2xl">
     <div class="flex items-center mb-4">
         <div class="p-3 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-md mr-4">
@@ -289,7 +337,7 @@ use Illuminate\Support\Str;
             Klik tombol <span class="mx-1 px-2 py-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-md text-xs font-bold shadow-md">"Lihat Detail"</span> pada tabel untuk menampilkan informasi lengkap peminjaman
         </p>
     </div>
-</div>
+</div> -->
 
 <!-- MODAL TAMBAH PEMINJAMAN BARU -->
 <div
@@ -451,7 +499,7 @@ use Illuminate\Support\Str;
                                                     :class="selected && selected.id === item.id ? 'bg-blue-50 border-l-4 border-l-blue-600' : ''">
                                                     <div class="flex items-start space-x-3">
                                                         <div class="flex-1 min-w-0">
-                                                            <p class="text-sm font-semibold text-gray-900 line-clamp-2" x-text="item.uraian_informasi_arsip"></p>
+                                                            <p class="text-sm font-semibold text-gray-900 whitespace-normal break-words leading-relaxed" x-text="item.uraian_informasi_arsip"></p>
                                                             <div class="flex flex-wrap gap-2 mt-1.5">
                                                                 <span class="inline-flex items-center text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md">
                                                                     <i class="fa-solid fa-tag mr-1"></i>
@@ -615,12 +663,11 @@ use Illuminate\Support\Str;
                                             type="date"
                                             name="batas_peminjaman"
                                             required
-                                            min="{{ date('Y-m-d', strtotime('+7 day')) }}"
                                             class="w-full pl-11 pr-4 py-3 bg-white border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all outline-none">
                                     </div>
                                     <p class="mt-1 text-xs text-gray-600">
                                         <i class="fa-solid fa-info-circle mr-1"></i>
-                                        Minimal 7 hari dari tanggal pinjam
+                                        Pilih tanggal batas pengembalian warkah
                                     </p>
                                 </div>
 

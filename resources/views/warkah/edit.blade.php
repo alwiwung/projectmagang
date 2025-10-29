@@ -9,37 +9,44 @@
 
     {{-- Notifikasi --}}
     @if (session('success'))
-        <div class="mb-4 p-4 bg-green-100 text-green-800 rounded-lg border border-green-300">
-            {{ session('success') }}
-        </div>
+    <div class="mb-4 p-4 bg-green-100 text-green-800 rounded-lg border border-green-300">
+        {{ session('success') }}
+    </div>
     @endif
 
     @if ($errors->any())
-        <div class="mb-4 p-4 bg-red-100 text-red-800 rounded-lg border border-red-300">
-            <strong>Terjadi Kesalahan:</strong>
-            <ul class="list-disc pl-5 mt-1 text-sm">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
+    <div class="mb-4 p-4 bg-red-100 text-red-800 rounded-lg border border-red-300">
+        <strong>Terjadi Kesalahan:</strong>
+        <ul class="list-disc pl-5 mt-1 text-sm">
+            @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
     @endif
 
     {{-- Jika status Dipinjam --}}
     @if ($warkah->status == 'Dipinjam')
-        <div class="mb-6 p-4 bg-yellow-100 border border-yellow-300 rounded-lg text-yellow-800">
-            ⚠️ Arsip ini sedang <strong>Dipinjam</strong>. Data tidak dapat diubah sampai arsip dikembalikan.
-        </div>
+    <div class="mb-6 p-4 bg-yellow-100 border border-yellow-300 rounded-lg text-yellow-800">
+        ⚠️ Arsip ini sedang <strong>Dipinjam</strong>. Data tidak dapat diubah sampai arsip dikembalikan.
+    </div>
+    @endif
+
+    {{-- Jika status Terlambat --}}
+    @if ($warkah->status == 'Terlambat')
+    <div class="mb-6 p-4 bg-red-100 border border-red-300 rounded-lg text-red-800">
+        🚨 Arsip ini status <strong>Terlambat</strong>. Data tidak dapat diubah sampai arsip dikembalikan.
+    </div>
     @endif
 
     <form action="{{ route('warkah.update', $warkah->id) }}" method="POST"
-          class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+        class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
         @csrf
         @method('PUT')
 
         @php
-            $disabled = $warkah->status == 'Dipinjam' ? 'disabled' : '';
-            $readonly = $warkah->status == 'Dipinjam' ? 'readonly' : '';
+        $disabled = ($warkah->status == 'Dipinjam' || $warkah->status == 'Terlambat') ? 'disabled' : '';
+        $readonly = ($warkah->status == 'Dipinjam' || $warkah->status == 'Terlambat') ? 'readonly' : '';
         @endphp
 
         {{-- 1. Kode Klasifikasi & Jenis Arsip Vital --}}
@@ -48,15 +55,15 @@
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Kode Klasifikasi</label>
                 <input type="text" name="kode_klasifikasi" value="{{ old('kode_klasifikasi', $warkah->kode_klasifikasi) }}"
                     {{ $readonly }}
-                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400" 
-                    placeholder="Contoh : HP.02" required/>
+                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400"
+                    placeholder="Contoh : HP.02" required />
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Jenis Arsip Vital</label>
                 <input type="text" name="jenis_arsip_vital" value="{{ old('jenis_arsip_vital', $warkah->jenis_arsip_vital) }}"
                     {{ $readonly }}
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400"
-                    placeholder="Contoh: Surat Keputusan Gubernur..." required/>
+                    placeholder="Contoh: Surat Keputusan Gubernur..." required />
             </div>
         </div>
 
@@ -65,8 +72,8 @@
             <label class="block text-sm font-semibold text-gray-700 mb-1">Nomor Item Arsip</label>
             <input type="text" name="nomor_item_arsip" value="{{ old('nomor_item_arsip', $warkah->nomor_item_arsip) }}"
                 {{ $readonly }}
-                class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400" 
-                placeholder="Contoh : 001/HP/2001"/>
+                class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400"
+                placeholder="Contoh : 001/HP/2001" />
         </div>
 
         {{-- 3. Uraian Informasi Arsip --}}
@@ -85,14 +92,14 @@
                 <input type="text" name="kurun_waktu_berkas" value="{{ old('kurun_waktu_berkas', $warkah->kurun_waktu_berkas) }}"
                     {{ $readonly }}
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400"
-                    placeholder="Contoh: 1998–2003" required/>
+                    placeholder="Contoh: 1998–2003" required />
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Media</label>
                 <input type="text" name="media" value="{{ old('media', $warkah->media) }}"
                     {{ $readonly }}
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400"
-                    placeholder="Contoh: Kertas, Digital, Mikrofilm"/>
+                    placeholder="Contoh: Kertas, Digital, Mikrofilm" />
             </div>
         </div>
 
@@ -103,21 +110,21 @@
                 <input type="text" name="jumlah" value="{{ old('jumlah', $warkah->jumlah) }}"
                     {{ $readonly }}
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400"
-                    placeholder="Contoh: 1 Berkas"/>
+                    placeholder="Contoh: 1 Berkas" />
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Jangka Simpan Aktif</label>
                 <input type="text" name="aktif" value="{{ old('aktif', $warkah->aktif) }}"
                     {{ $readonly }}
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400"
-                    placeholder="Contoh: 5 Tahun"/>
+                    placeholder="Contoh: 5 Tahun" />
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Jangka Simpan Inaktif</label>
                 <input type="text" name="inaktif" value="{{ old('inaktif', $warkah->inaktif) }}"
                     {{ $readonly }}
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400"
-                    placeholder="Contoh: Permanen"/>
+                    placeholder="Contoh: Permanen" />
             </div>
         </div>
 
@@ -128,14 +135,14 @@
                 <input type="text" name="tingkat_perkembangan" value="{{ old('tingkat_perkembangan', $warkah->tingkat_perkembangan) }}"
                     {{ $readonly }}
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400"
-                    placeholder="Contoh: Asli"/>
+                    placeholder="Contoh: Asli" />
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Ruang Penyimpanan / Rak</label>
                 <input type="text" name="ruang_penyimpanan_rak" value="{{ old('ruang_penyimpanan_rak', $warkah->ruang_penyimpanan_rak) }}"
                     {{ $readonly }}
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400"
-                    placeholder="Contoh: Rak 1 Baris 1"/>
+                    placeholder="Contoh: Rak 1 Baris 1" />
             </div>
         </div>
 
@@ -146,14 +153,14 @@
                 <input type="text" name="no_boks_definitif" value="{{ old('no_boks_definitif', $warkah->no_boks_definitif) }}"
                     {{ $readonly }}
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400"
-                    placeholder="Contoh: BX-001"/>
+                    placeholder="Contoh: BX-001" />
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">No. Folder</label>
                 <input type="text" name="no_folder" value="{{ old('no_folder', $warkah->no_folder) }}"
                     {{ $readonly }}
                     class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400"
-                    placeholder="Contoh: B / 099 - 158 / 1972"/>
+                    placeholder="Contoh: B / 099 - 158 / 1972" />
             </div>
         </div>
 
@@ -196,11 +203,11 @@
                 Batal
             </a>
 
-            @if ($warkah->status != 'Dipinjam')
-                <button type="submit"
-                    class="px-6 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition">
-                    Edit Data Warkah
-                </button>
+            @if ($warkah->status != 'Dipinjam' && $warkah->status != 'Terlambat')
+            <button type="submit"
+                class="px-6 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition">
+                Edit Data Warkah
+            </button>
             @endif
         </div>
     </form>

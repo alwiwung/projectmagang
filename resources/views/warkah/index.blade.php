@@ -15,12 +15,11 @@ use Illuminate\Support\Str;
         class="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition transform hover:scale-105">
         <i class="fa-solid fa-plus mr-2"></i> Tambah Data
     </a>
-
 </div>
+
 <div class="mt-6 bg-white shadow-md rounded-lg p-4 flex items-center justify-between">
     <div class="flex items-center gap-3">
         <form action="{{ route('warkah.export') }}" method="GET" class="flex items-center">
-            {{-- Kirim semua filter yang aktif agar export sesuai hasil pencarian --}}
             <input type="hidden" name="keyword" value="{{ request('keyword') }}">
             <input type="hidden" name="kurun_waktu_berkas" value="{{ request('kurun_waktu_berkas') }}">
             <input type="hidden" name="ruang_penyimpanan_rak" value="{{ request('ruang_penyimpanan_rak') }}">
@@ -33,7 +32,6 @@ use Illuminate\Support\Str;
             </button>
         </form>
 
-        {{-- Bagian Import (tidak diubah) --}}
         <form action="{{ route('warkah.import') }}" method="POST" enctype="multipart/form-data" class="flex items-center gap-3">
             @csrf
             <label class="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md cursor-pointer shadow-sm transition">
@@ -46,12 +44,24 @@ use Illuminate\Support\Str;
     <div class="text-sm text-gray-500 italic">
         <i class="fas fa-info-circle"></i> Format file harus .xlsx atau .xls
     </div>
-    </div>
-
+</div>
 @endsection
 
 @section('content')
 <div class="space-y-6">
+
+    <!-- Statistics Card -->
+    <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-md p-6 text-white">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium opacity-90">Total data Warkah Keseluruhan</p>
+                <h3 class="text-3xl font-bold mt-2">{{ $totalWarkah ?? 0 }} Warkah</h3>
+            </div>
+            <div class="bg-white bg-opacity-20 rounded-full p-3">
+                <i class="fas fa-folder-open text-2xl"></i>
+            </div>
+        </div>
+    </div>
 
     <!-- Search & Filter Section -->
     <form method="GET" action="{{ route('warkah.index') }}" class="bg-white rounded-lg shadow-md p-4 sm:p-6">
@@ -65,11 +75,11 @@ use Illuminate\Support\Str;
                     type="text"
                     name="keyword"
                     value="{{ request('keyword') }}"
-                    placeholder="Cari , uraian informasi atau kode klasifikasi..."
+                    placeholder="Cari, uraian informasi atau kode klasifikasi..."
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
             </div>
 
-            <!-- Filter Tahun (ganti name ke 'kurun_waktu_berkas') -->
+            <!-- Filter Tahun -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                     <i class="fa-solid fa-calendar mr-1"></i> Tahun
@@ -86,7 +96,7 @@ use Illuminate\Support\Str;
                 </select>
             </div>
 
-            <!-- Filter Lokasi (ganti name ke 'ruang_penyimpanan_rak') -->
+            <!-- Filter Lokasi -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                     <i class="fa-solid fa-map-pin mr-1"></i> Ruang Penyimpanan / Rak
@@ -117,7 +127,7 @@ use Illuminate\Support\Str;
             </a>
         </div>
     </form>
-    {{-- <thead class="bg-blue-600 text-white"> --}}
+
     <!-- Table Section -->
     <div class="hidden md:block bg-white rounded-lg shadow-md overflow-hidden">
         <div class="overflow-x-auto">
@@ -127,19 +137,19 @@ use Illuminate\Support\Str;
                         <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">No</th>
                         <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
                             <i class="fa-solid fa-tag mr-1"></i> Kode Klasifikasi
-                        </th>  
+                        </th>
                         <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
                             <i class="fa-solid fa-note-sticky mr-1"></i> Uraian Informasi Arsip
-                        </th> 
+                        </th>
                         <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
                             <i class="fa-solid fa-calendar mr-1"></i> Kurun Waktu
                         </th>
                         <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
                             <i class="fa-solid fa-map-pin mr-1"></i> Ruang Penyimpanan / Rak
                         </th>
-                          <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
-            <i class="fa-solid fa-circle-info mr-1"></i> Status
-        </th>
+                        <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
+                            <i class="fa-solid fa-circle-info mr-1"></i> Status
+                        </th>
                         <th class="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider">
                             <i class="fa-solid fa-cog mr-1"></i> Aksi
                         </th>
@@ -154,7 +164,7 @@ use Illuminate\Support\Str;
                         <td class="text-center text-sm px-4 py-3 align-middle">
                             {{ $item->kode_klasifikasi ?? '-' }}
                         </td>
-                         <td class="px-6 py-4 text-sm text-gray-600 truncate max-w-xs" title="{{ $item->uraian_informasi_arsip }}">
+                        <td class="px-6 py-4 text-sm text-gray-600 truncate max-w-xs" title="{{ $item->uraian_informasi_arsip }}">
                             {{ Str::limit($item->uraian_informasi_arsip, 60) ?: '-' }}
                         </td>
                         <td class="text-center text-sm px-4 py-3 align-middle">
@@ -164,20 +174,24 @@ use Illuminate\Support\Str;
                             {{ $item->ruang_penyimpanan_rak ?? '-' }}
                         </td>
                         <td class="text-center text-sm px-4 py-3 align-middle">
-    @if($item->status == 'Tersedia')
-        <span class="px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-            {{ $item->status }}
-        </span>
-    @elseif($item->status == 'Dipinjam')
-        <span class="px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
-            {{ $item->status }}
-        </span>
-    @else
-        <span class="px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">
-            {{ $item->status ?? '-' }}
-        </span>
-    @endif
-</td>
+                            @if($item->status == 'Tersedia')
+                            <span class="px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                                {{ $item->status }}
+                            </span>
+                            @elseif($item->status == 'Dipinjam')
+                            <span class="px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
+                                {{ $item->status }}
+                            </span>
+                            @elseif($item->status == 'Terlambat')
+                            <span class="px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                                {{ $item->status }}
+                            </span>
+                            @else
+                            <span class="px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">
+                                {{ $item->status ?? '-' }}
+                            </span>
+                            @endif
+                        </td>
 
                         <td class="text-center px-4 py-3 align-middle">
                             <div class="flex justify-center gap-2">
@@ -191,12 +205,34 @@ use Illuminate\Support\Str;
                                     title="Edit">
                                     <i class="fa-solid fa-pencil"></i>
                                 </a>
+
+                                <!-- ✨ BUTTON HAPUS - TAMBAHKAN INI -->
+                                @if($item->status == 'Tersedia')
+                                <form action="{{ route('warkah.destroy', $item->id) }}" method="POST" class="inline"
+                                    onsubmit="return confirm('Apakah Anda yakin ingin menghapus data warkah ini?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                        class="p-2 rounded-full text-red-600 hover:bg-red-100 transition"
+                                        title="Hapus">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
+                                @else
+                                <button type="button"
+                                    class="p-2 rounded-full text-gray-400 cursor-not-allowed opacity-50"
+                                    title="Tidak dapat dihapus ({{ $item->status }})"
+                                    disabled>
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                                @endif
                             </div>
                         </td>
+
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="text-center py-8">
+                        <td colspan="7" class="text-center py-8">
                             <div class="flex flex-col items-center justify-center">
                                 <i class="fa-solid fa-inbox text-4xl text-gray-300 mb-3"></i>
                                 <p class="text-gray-500 font-medium">Tidak ada data arsip</p>
@@ -220,7 +256,7 @@ use Illuminate\Support\Str;
                 </span>
             </div>
 
-            <p class="text-sm text-gray-700 mb-2"><strong>Lokasi:</strong> {{ $item->lokasi }}</p>
+            <p class="text-sm text-gray-700 mb-2"><strong>Lokasi:</strong> {{ $item->ruang_penyimpanan_rak }}</p>
             <p class="text-sm text-gray-700 mb-3"><strong>Uraian:</strong> {{ Str::limit($item->uraian_informasi_arsip, 80) ?: '-' }}</p>
 
             <div class="flex gap-2 pt-3 border-t border-gray-200">
@@ -254,8 +290,4 @@ use Illuminate\Support\Str;
     @endif
 
 </div>
-
-{{-- Import / Export Excel --}}
-
-
 @endsection
