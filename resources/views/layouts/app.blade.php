@@ -10,31 +10,25 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-    <script src="//unpkg.com/alpinejs" defer></script>
-    
-    
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-
-
     <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <!-- Favicon -->
     <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 </head>
 
-<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen" x-data="{ mobileMenuOpen: false, darkMode: false, showProfileModal: false }">
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
+
+    <!-- Alpine.js Data Component -->
+    <div x-data="{ mobileMenuOpen: false, showProfileModal: false }" x-cloak>
 
     <!-- 🔵 Navigation Bar -->
-    <nav class="bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md sticky top-0 z-50" x-data="{ mobileMenuOpen: false, userDropdown: false }">
+    <nav class="bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md sticky top-0 z-50" x-data="{ userDropdown: false }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <!-- Logo -->
-                <a class="flex items-center space-x-2 text-xl sm:text-2xl font-bold hover:opacity-90 transition">
+                <a href="{{ route('warkah.index') }}" class="flex items-center space-x-2 text-xl sm:text-2xl font-bold hover:opacity-90 transition">
                     <i class="fa-solid fa-folder-open text-white"></i>
                     <span class="hidden sm:inline">WarkahKu</span>
                     <span class="sm:hidden">Warkah</span>
@@ -62,7 +56,13 @@
                             @click.away="open = false"
                             class="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-blue-700 transition">
                             <i class="fa-solid fa-user-circle text-lg sm:text-xl"></i>
-                            <span class="text-xs sm:text-sm font-medium">Admin</span>
+                            <span class="text-xs sm:text-sm font-medium">
+                                @auth
+                                    {{ auth()->user()->name ?? 'Admin' }}
+                                @else
+                                    Admin
+                                @endauth
+                            </span>
                             <i class="fa-solid fa-chevron-down text-xs transition-transform" :class="open ? 'rotate-180' : ''"></i>
                         </button>
 
@@ -78,10 +78,13 @@
                             class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50"
                             style="display: none;">
 
-                            <!-- Profile Link (Optional) -->
-                            <a @click="open = false; showProfileModal = true" href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition">
+                            <!-- Profile Link -->
+                            <button 
+                                @click.prevent="open = false; showProfileModal = true" 
+                                type="button"
+                                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition">
                                 <i class="fa-solid fa-user mr-2"></i> Profil Saya
-                            </a>
+                            </button>
 
                             <!-- Divider -->
                             <div class="border-t border-gray-200"></div>
@@ -141,9 +144,12 @@
                     <i class="fa-solid fa-copy mr-2"></i> Permintaan Salinan
                 </a>
                 <div class="border-t border-blue-500 mt-3 pt-3">
-                    <a @click="mobileMenuOpen = false; showProfileModal = true" href="#" class="block px-3 py-2 text-sm hover:bg-blue-700 rounded-md transition">
-                        <i class="fa-solid fa-user-circle mr-2"></i> Admin
-                    </a>
+                    <button 
+                        @click.prevent="mobileMenuOpen = false; showProfileModal = true" 
+                        type="button"
+                        class="w-full text-left block px-3 py-2 text-sm hover:bg-blue-700 rounded-md transition">
+                        <i class="fa-solid fa-user-circle mr-2"></i> Profil Saya
+                    </button>
                     @auth
                     <form action="{{ route('logout') }}" method="POST" class="mt-2">
                         @csrf
@@ -167,17 +173,17 @@
     @endif
 
     <!-- 👤 Profile Modal -->
+    <template x-if="showProfileModal">
     <div 
-        x-show="showProfileModal" 
-        x-cloak
-        class="fixed inset-0 z-50 overflow-y-auto" 
+        class="fixed inset-0 z-[60] overflow-y-auto" 
         aria-labelledby="modal-title" 
         role="dialog" 
-        aria-modal="true">
+        aria-modal="true"
+        @keydown.escape.window="showProfileModal = false"
+        x-cloak>
         
         <!-- Background Overlay -->
         <div 
-            x-show="showProfileModal"
             x-transition:enter="ease-out duration-300"
             x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100"
@@ -191,14 +197,14 @@
         <!-- Modal Content -->
         <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
             <div 
-                x-show="showProfileModal"
                 x-transition:enter="ease-out duration-300"
                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave="ease-in duration-200"
                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg"
+                @click.stop>
                 
                 <!-- Modal Header -->
                 <div class="bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-4">
@@ -209,6 +215,7 @@
                         </h3>
                         <button 
                             @click="showProfileModal = false"
+                            type="button"
                             class="text-white hover:text-gray-200 transition">
                             <i class="fa-solid fa-xmark text-2xl"></i>
                         </button>
@@ -247,7 +254,7 @@
                                 <i class="fa-solid fa-envelope mr-2 text-blue-600"></i>
                                 Email
                             </label>
-                            <p class="text-gray-900 font-medium text-lg">
+                            <p class="text-gray-900 font-medium text-lg break-all">
                                 @auth
                                     {{ auth()->user()->email ?? 'admin@warkah.id' }}
                                 @else
@@ -256,22 +263,7 @@
                             </p>
                         </div>
 
-                        <!-- Role (Optional) -->
-                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                            <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center mb-2">
-                                <i class="fa-solid fa-shield-halved mr-2 text-blue-600"></i>
-                                Role
-                            </label>
-                            <p class="text-gray-900 font-medium text-lg">
-                                @auth
-                                    {{ auth()->user()->role ?? 'Administrator' }}
-                                @else
-                                    Administrator
-                                @endauth
-                            </p>
-                        </div>
-
-                        <!-- Joined Date (Optional) -->
+                        <!-- Joined Date -->
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                             <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center mb-2">
                                 <i class="fa-solid fa-calendar mr-2 text-blue-600"></i>
@@ -300,6 +292,8 @@
             </div>
         </div>
     </div>
+    </template>
+    <!-- End Profile Modal -->
 
     <!-- 📦 Main Content -->
     <main class="flex-grow">
@@ -358,17 +352,12 @@
         </div>
     </footer>
 
+    </div>
+    <!-- End Alpine.js Data Component -->
 
-    
-    {{--
-    <!-- 🌙 Floating Dark Mode Toggle -->
-    <button 
-        @click="darkMode = !darkMode; document.documentElement.classList.toggle('dark', darkMode)"
-        class="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg hover:shadow-xl transition transform hover:scale-110"
-        title="Toggle Dark Mode"
-        aria-label="Toggle dark mode">
-        <i :class="darkMode ? 'fa-solid fa-sun' : 'fa-solid fa-moon'"></i>
-    </button> --}}
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
 
 </body>
 
