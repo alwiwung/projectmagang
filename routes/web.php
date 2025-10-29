@@ -48,7 +48,6 @@ Route::post('/logout', [LoginController::class, 'logout'])
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
-
     /*
     |--------------------------------------------------------------------------
     | Dashboard
@@ -150,16 +149,3 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/warkah/search', [PermintaanController::class, 'searchWarkah'])->name('warkah.search');
     Route::get('/warkah/{id}', [PermintaanController::class, 'getWarkahDetail'])->name('warkah.detail');
 });
-
-/*
-|--------------------------------------------------------------------------
-| Route Publik Tambahan (di luar middleware auth)
-|--------------------------------------------------------------------------
-*/
-
-// Cetak PDF permintaan (akses langsung)
-Route::get('/permintaan/{id}/cetak', [PermintaanController::class, 'cetakPDF'])->name('permintaan.cetak');
-
-// API Warkah publik
-Route::get('/api/warkah/search', [PermintaanController::class, 'searchWarkah'])->name('warkah.search');
-Route::get('/warkah/{id}', [PermintaanController::class, 'getWarkahDetail'])->name('warkah.detail');
