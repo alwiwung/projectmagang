@@ -20,6 +20,12 @@ return new class extends Migration
             $table->enum('status', ['Dipinjam', 'Dikembalikan', 'Terlambat'])->default('Dipinjam');
             $table->date('tanggal_kembali')->nullable();
             $table->text('catatan')->nullable();
+
+            // Tambahan baru
+            $table->string('nomor_nota_dinas');
+            $table->string('file_nota_dinas');
+            $table->text('uraian')->nullable();
+
             $table->timestamps();
 
             // Index untuk performa

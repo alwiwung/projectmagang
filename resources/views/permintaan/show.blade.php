@@ -236,8 +236,8 @@
                         </div>
                     </div>
                 </div>
-
-                {{-- Surat Disposisi --}}
+            </div>
+                {{-- Surat Disposisi
                 <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                     <div class="bg-gradient-to-r from-orange-500 to-amber-600 px-6 py-4">
                         <h2 class="text-xl font-bold text-white flex items-center gap-2">
@@ -276,8 +276,8 @@
                             @endif
                         </div>
                     </div>
-                </div>
-            </div>
+                </div> --}}
+            
 
             {{-- Sidebar --}}
             <div class="space-y-6">
