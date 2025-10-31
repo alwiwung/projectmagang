@@ -76,31 +76,43 @@ class PeminjamanController extends Controller
     }
 
     /** 🔹 Simpan data peminjaman baru */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'nama_peminjam' => 'required|string|max:255',
-            'no_hp' => 'required|string|max:20',
-            'email' => 'required|email|max:255',
-            'tanggal_pinjam' => 'required|date',
-            'tujuan_pinjam' => 'required|string',
-            'batas_peminjaman' => 'required|date',
-        ]);
+   /** 🔹 Simpan data peminjaman baru */
+            /** 🔹 Simpan data peminjaman baru */
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'nama_peminjam' => 'required|string|max:255',
+        'no_hp' => 'required|string|max:20',
+        'email' => 'required|email|max:255',
+        'tanggal_pinjam' => 'required|date',
+        'tujuan_pinjam' => 'required|string',
+        'batas_peminjaman' => 'required|date',
+        'nomor_nota_dinas' => 'required|string|max:255',
+        'file_nota_dinas' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+        'uraian' => 'nullable|string|max:1000',  // Sesuai nama kolom di DB
+    ]);
 
-        $warkah = Warkah::find($request->id_warkah);
+    $warkah = Warkah::find($request->id_warkah);
 
-        if ($warkah->isDipinjam()) {
-            return back()->withErrors(['id_warkah' => 'Warkah ini sedang dipinjam oleh orang lain']);
-        }
-
-        $validated['id_warkah'] = $request->id_warkah;
-        PeminjamanWarkah::create($validated);
-        $warkah->update(['status' => 'Dipinjam']);
-
-        return redirect()->route('peminjaman.index')
-            ->with('success', 'Data peminjaman berhasil ditambahkan');
+    if ($warkah->isDipinjam()) {
+        return back()->withErrors(['id_warkah' => 'Warkah ini sedang dipinjam oleh orang lain']);
     }
 
+    // 🔸 Upload file nota dinas
+    $fileNotaDinasPath = null;
+    if ($request->hasFile('file_nota_dinas')) {
+        $fileNotaDinasPath = $request->file('file_nota_dinas')->store('nota_dinas', 'public');
+    }
+
+    $validated['id_warkah'] = $request->id_warkah;
+    $validated['file_nota_dinas'] = $fileNotaDinasPath;
+    
+    PeminjamanWarkah::create($validated);
+    $warkah->update(['status' => 'Dipinjam']);
+
+    return redirect()->route('peminjaman.index')
+        ->with('success', 'Data peminjaman berhasil ditambahkan');
+}
     /** 🔹 Tampilkan detail peminjaman (halaman show) */
     public function show($id)
     {

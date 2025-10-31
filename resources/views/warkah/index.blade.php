@@ -16,6 +16,18 @@ use Illuminate\Support\Str;
         <i class="fa-solid fa-plus mr-2"></i> Tambah Data
     </a>
 </div>
+ <!-- Statistics Card -->
+    <div class="mt-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-md p-6 text-white">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium opacity-90">Total data Warkah Keseluruhan</p>
+                <h3 class="text-3xl font-bold mt-2">{{ $totalWarkah ?? 0 }} Warkah</h3>
+            </div>
+            <div class="bg-white bg-opacity-20 rounded-full p-3">
+                <i class="fas fa-folder-open text-2xl"></i>
+            </div>
+        </div>
+    </div>
 
 <div class="mt-6 bg-white shadow-md rounded-lg p-4 flex items-center justify-between">
     <div class="flex items-center gap-3">
@@ -49,20 +61,6 @@ use Illuminate\Support\Str;
 
 @section('content')
 <div class="space-y-6">
-
-    <!-- Statistics Card -->
-    <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-md p-6 text-white">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm font-medium opacity-90">Total data Warkah Keseluruhan</p>
-                <h3 class="text-3xl font-bold mt-2">{{ $totalWarkah ?? 0 }} Warkah</h3>
-            </div>
-            <div class="bg-white bg-opacity-20 rounded-full p-3">
-                <i class="fas fa-folder-open text-2xl"></i>
-            </div>
-        </div>
-    </div>
-
     <!-- Search & Filter Section -->
     <form method="GET" action="{{ route('warkah.index') }}" class="bg-white rounded-lg shadow-md p-4 sm:p-6">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

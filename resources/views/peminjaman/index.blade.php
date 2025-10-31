@@ -15,6 +15,51 @@ use Illuminate\Support\Str;
         </div>
     </div>
 
+     <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Total Dipinjam -->
+        <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium opacity-90">Total Dipinjam</p>
+                    <h3 class="text-3xl font-bold mt-2">{{ $totalDipinjam ?? 0 }}</h3>
+                    <p class="text-xs opacity-75 mt-1">Warkah sedang dipinjam</p>
+                </div>
+                <div class="bg-white bg-opacity-20 rounded-full p-3">
+                    <i class="fas fa-clock text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Terlambat -->
+        <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium opacity-90">Total Terlambat</p>
+                    <h3 class="text-3xl font-bold mt-2">{{ $totalTerlambat ?? 0 }}</h3>
+                    <p class="text-xs opacity-75 mt-1">Melewati batas waktu</p>
+                </div>
+                <div class="bg-white bg-opacity-20 rounded-full p-3 animate-pulse">
+                    <i class="fas fa-exclamation-triangle text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Dikembalikan -->
+        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium opacity-90">Total Dikembalikan</p>
+                    <h3 class="text-3xl font-bold mt-2">{{ $totalDikembalikan ?? 0 }}</h3>
+                    <p class="text-xs opacity-75 mt-1">Sudah dikembalikan</p>
+                </div>
+                <div class="bg-white bg-opacity-20 rounded-full p-3">
+                    <i class="fas fa-check-circle text-2xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Action Bar -->
     <div class="bg-gradient-to-r from-white via-gray-50 to-white rounded-xl shadow-lg border border-gray-200 p-4 transform transition-all duration-300 hover:shadow-xl">
         <div class="flex flex-col lg:flex-row gap-3 items-start lg:items-center justify-between">
@@ -77,50 +122,6 @@ use Illuminate\Support\Str;
     <!-- TAMBAHKAN SETELAH ACTION BAR (setelah closing </div> dari Action Bar) -->
     <!-- SEBELUM DATA TABLE -->
 
-    <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <!-- Total Dipinjam -->
-        <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-all duration-300">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium opacity-90">Total Dipinjam</p>
-                    <h3 class="text-3xl font-bold mt-2">{{ $totalDipinjam ?? 0 }}</h3>
-                    <p class="text-xs opacity-75 mt-1">Warkah sedang dipinjam</p>
-                </div>
-                <div class="bg-white bg-opacity-20 rounded-full p-3">
-                    <i class="fas fa-clock text-2xl"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Total Terlambat -->
-        <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-all duration-300">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium opacity-90">Total Terlambat</p>
-                    <h3 class="text-3xl font-bold mt-2">{{ $totalTerlambat ?? 0 }}</h3>
-                    <p class="text-xs opacity-75 mt-1">Melewati batas waktu</p>
-                </div>
-                <div class="bg-white bg-opacity-20 rounded-full p-3 animate-pulse">
-                    <i class="fas fa-exclamation-triangle text-2xl"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Total Dikembalikan -->
-        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-all duration-300">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium opacity-90">Total Dikembalikan</p>
-                    <h3 class="text-3xl font-bold mt-2">{{ $totalDikembalikan ?? 0 }}</h3>
-                    <p class="text-xs opacity-75 mt-1">Sudah dikembalikan</p>
-                </div>
-                <div class="bg-white bg-opacity-20 rounded-full p-3">
-                    <i class="fas fa-check-circle text-2xl"></i>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Data Table -->
     <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-xl border border-gray-200 overflow-hidden transform transition-all duration-300 hover:shadow-2xl">
@@ -396,7 +397,7 @@ use Illuminate\Support\Str;
             </div>
 
             <!-- Form Content -->
-            <form method="POST" action="{{ route('peminjaman.store') }}" x-data="formPeminjamanModal()">
+            <form method="POST" action="{{ route('peminjaman.store') }}" enctype="multipart/form-data" x-data="formPeminjamanModal()">
                 @csrf
                 <div class="px-6 py-6 max-h-[calc(100vh-300px)] overflow-y-auto">
                     <div class="space-y-6">
@@ -693,7 +694,78 @@ use Illuminate\Support\Str;
                                 </div>
                             </div>
                         </div>
+                        <!-- Section 4: Nota Dinas -->
+                        <div class="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-5 border-2 border-orange-200">
+                            <div class="flex items-center mb-4">
+                                <div class="w-8 h-8 bg-gradient-to-br from-orange-600 to-orange-700 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fa-solid fa-file-lines text-white text-sm"></i>
+                                </div>
+                                <h4 class="text-lg font-bold text-gray-900">4. Nota Dinas Peminjaman</h4>
+                            </div>
 
+                            <div class="space-y-4">
+                                <!-- Nomor Nota Dinas -->
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Nomor Nota Dinas <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
+                                            <i class="fa-solid fa-hashtag"></i>
+                                        </span>
+                                        <input
+                                            type="text"
+                                            name="nomor_nota_dinas"
+                                            required
+                                            placeholder="Contoh: ND/001/2025"
+                                            class="w-full pl-11 pr-4 py-3 bg-white border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all outline-none">
+                                    </div>
+                                    <p class="mt-1 text-xs text-gray-600">
+                                        <i class="fa-solid fa-info-circle mr-1"></i>
+                                        Masukkan nomor nota dinas sesuai format yang berlaku
+                                    </p>
+                                </div>
+
+                                <!-- File Nota Dinas -->
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Upload File Nota Dinas <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="relative">
+                                        <input
+                                            type="file"
+                                            name="file_nota_dinas"
+                                            required
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                            class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all outline-none file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100">
+                                    </div>
+                                    <p class="mt-1 text-xs text-gray-600">
+                                        <i class="fa-solid fa-file-pdf mr-1"></i>
+                                        Format: PDF, JPG, JPEG, PNG (Max: 5MB)
+                                    </p>
+                                </div>
+
+                                <!-- Uraian Nota Dinas -->
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Uraian Nota Dinas (Opsional)
+                                    </label>
+                                    <div class="relative">
+                                        <span class="absolute top-3 left-4 text-gray-400">
+                                            <i class="fa-solid fa-align-left"></i>
+                                        </span>
+                                        <textarea
+                                            name="uraian"
+                                            rows="3"
+                                            placeholder="Tuliskan ringkasan atau uraian nota dinas jika diperlukan..."
+                                            class="w-full pl-11 pr-4 py-3 bg-white border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all outline-none resize-none"></textarea>
+                                    </div>
+                                    <p class="mt-1 text-xs text-gray-600">
+                                        Isi ini bersifat opsional, dapat dikosongkan
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                         <!-- Info Box -->
                         <div class="bg-gradient-to-r from-amber-50 to-yellow-50 border-l-4 border-amber-400 p-4 rounded-lg">
                             <div class="flex items-start">
