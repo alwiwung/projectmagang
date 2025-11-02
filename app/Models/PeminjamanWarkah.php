@@ -21,20 +21,22 @@ class PeminjamanWarkah extends Model
         'tujuan_pinjam',
         'batas_peminjaman',
         'status',
-          // ✅ Tambahan baru
+        // ✅ Tambahan baru
         'nomor_nota_dinas',
         'file_nota_dinas',
         'uraian',
         'tanggal_kembali',
-         'kondisi',       // ✅ tambahkan ini
+        'kondisi',       // ✅ tambahkan ini
         'bukti',         // ✅ tambahkan ini
         'catatan',
+        'notified_at',
     ];
 
     protected $casts = [
         'tanggal_pinjam' => 'date',
         'batas_peminjaman' => 'date',
         'tanggal_kembali' => 'date',
+        'notified_at' => 'datetime',
     ];
 
     /**
@@ -42,10 +44,10 @@ class PeminjamanWarkah extends Model
      * RELASI KE MASTER WARKAH
      * =============================
      */
-   public function warkah()
-{
-    return $this->belongsTo(Warkah::class, 'id_warkah', 'id');
-}
+    public function warkah()
+    {
+        return $this->belongsTo(Warkah::class, 'id_warkah', 'id');
+    }
 
 
     /**
@@ -93,6 +95,11 @@ class PeminjamanWarkah extends Model
         ];
 
         return $colors[$this->status] ?? 'gray';
+    }
+
+    public function getNamaLengkapAttribute()
+    {
+        return $this->nama_peminjam;
     }
 
     /**
@@ -156,5 +163,17 @@ class PeminjamanWarkah extends Model
     public function scopeWithWarkah($query)
     {
         return $query->with('warkah');
+    }
+
+    public function scopeBelumDinotifikasi($query)
+    {
+        return $query->whereNull('notified_at');
+    }
+
+    public function scopeOverdue($query)
+    {
+        return $query->where('status', 'Dipinjam')
+            ->whereDate('batas_peminjaman', '<', Carbon::today())
+            ->whereNull('notified_at');
     }
 }

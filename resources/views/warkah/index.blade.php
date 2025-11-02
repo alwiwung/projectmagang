@@ -29,19 +29,6 @@ use Illuminate\Support\Str;
     </div>
 </div>
 
-<!-- Statistics Card -->
-<div class="mt-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-md p-6 text-white">
-    <div class="flex items-center justify-between">
-        <div>
-            <p class="text-sm font-medium opacity-90">Total data Warkah Keseluruhan</p>
-            <h3 class="text-3xl font-bold mt-2">{{ $totalWarkah ?? 0 }} Warkah</h3>
-        </div>
-        <div class="bg-white bg-opacity-20 rounded-full p-3">
-            <i class="fas fa-folder-open text-2xl"></i>
-        </div>
-    </div>
-</div>
-
 
 <div class="mt-6 bg-white shadow-md rounded-lg p-4 flex items-center justify-between">
     <div class="flex items-center gap-3">

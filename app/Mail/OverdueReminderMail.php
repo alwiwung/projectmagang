@@ -28,7 +28,8 @@ class OverdueReminderMail extends Mailable
         return $this->subject('⚠️ Pengingat: Keterlambatan Pengembalian Warkah')
             ->view('emails.overdue-reminder')
             ->with([
-                'nama' => $this->peminjaman->nama_lengkap,
+                'nama' => $this->peminjaman->nama_peminjam,
+                'kode_warkah' => $this->peminjaman->kode_warkah,
                 'kode_warkah' => $this->peminjaman->warkah->kode_warkah ?? 'N/A',
                 'batas_pengembalian' => Carbon::parse($this->peminjaman->batas_peminjaman)
                     ->format('d F Y'),
