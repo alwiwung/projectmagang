@@ -7,6 +7,8 @@ use App\Models\Permintaan;
 use App\Models\Warkah;
 use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\PermintaanExport;
 use PDF;
 
 class PermintaanController extends Controller
@@ -51,6 +53,20 @@ class PermintaanController extends Controller
         return view('permintaan.index', compact('permintaan'));
     }
 
+    /**
+     * 🔹 Export ke Excel
+     */
+    public function exportExcel(Request $request)
+    {
+        $nama = $request->get('nama');
+        $uraian = $request->get('uraian');
+        $tanggalPermintaan = $request->get('tanggal_permintaan');
+        
+        return Excel::download(
+            new PermintaanExport($nama, $uraian, $tanggalPermintaan), 
+            'Laporan_Permintaan_Salinan_' . date('Y-m-d_His') . '.xlsx'
+        );
+    }
 
     /**
      * Form tambah permintaan baru

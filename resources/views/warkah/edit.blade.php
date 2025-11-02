@@ -76,6 +76,15 @@
                 placeholder="Contoh : 001/HP/2001" />
         </div>
 
+        {{-- 2. Nomor Item Arsip --}}
+        <div class="mt-6">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Ruangan</label>
+            <input type="text" name="lokasi" value="{{ old('lokasi', $warkah->lokasi) }}"
+                {{ $readonly }}
+                class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-400"
+                placeholder="Contoh : Ruangan Warkah 1, 2 , 3" />
+        </div>
+
         {{-- 3. Uraian Informasi Arsip --}}
         <div class="mt-6">
             <label class="block text-sm font-semibold text-gray-700 mb-1">Uraian Informasi Arsip</label>

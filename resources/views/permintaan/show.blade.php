@@ -185,6 +185,16 @@
                                     </p>
                                 </div>
                             </div>
+
+                                 <div class="space-y-2">
+                                <label class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Lokasi Ruangan Warkah</label>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-warehouse text-pink-600"></i>
+                                    <p class="text-gray-800 font-medium">
+                                        {{ $permintaan->warkah->lokasi ?? '-' }}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                         @else
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center">

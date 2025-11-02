@@ -41,6 +41,12 @@
                     class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-400 focus:ring focus:ring-blue-100 transition"
                     placeholder="Contoh: SK/01/1972">
             </div>
+             <div class="bg-white/70 p-4 rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Ruangan</label>
+                <input type="text" name="lokasi" value="{{ old('lokasi') }}"
+                    class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-400 focus:ring focus:ring-blue-100 transition"
+                    placeholder="Contoh : Ruangan Warkah 1, 2, 3">
+            </div>
 
             <div class="bg-white/70 p-4 rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition col-span-1 md:col-span-2">
                 <label class="block text-sm font-semibold text-gray-700 mb-2">
