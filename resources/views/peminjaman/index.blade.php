@@ -59,6 +59,42 @@ use Illuminate\Support\Str;
             </div>
         </div>
     </div>
+<!-- Export Section - Standalone (Letakkan SETELAH Statistics Cards dan SEBELUM Action Bar) -->
+<div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl shadow-lg border-2 border-green-200 p-5 transform transition-all duration-300 hover:shadow-xl">
+    <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+        <!-- Info Section -->
+        <div class="flex items-start space-x-3">
+            <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center shadow-lg">
+                <i class="fa-solid fa-file-export text-white text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    Export Data Peminjaman
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">
+                        <i class="fa-solid fa-database mr-1"></i>
+                        {{ $peminjaman->total() }} Data
+                    </span>
+                </h3>
+                  <p class="text-sm text-gray-600 mt-1">
+                    <i class="fa-solid fa-info-circle mr-1"></i>
+                    Export data ke format Excel untuk analisis lebih lanjut. Filter pencarian dan status akan otomatis diterapkan.
+                </p>
+            </div>
+        </div>
+
+        <!-- Export Button - Excel Only -->
+        <form method="GET" action="{{ route('peminjaman.export.excel') }}" class="inline-block">
+            <input type="hidden" name="search" value="{{ request('search') }}">
+            <input type="hidden" name="status" value="{{ request('status') }}">
+            <button 
+                type="submit"
+                class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 group">
+                <i class="fa-solid fa-file-excel text-2xl mr-2 group-hover:animate-bounce"></i>
+                <span>Excel</span>
+            </button>
+        </form>
+    </div>
+</div>
 
     <!-- Action Bar -->
     <div class="bg-gradient-to-r from-white via-gray-50 to-white rounded-xl shadow-lg border border-gray-200 p-4 transform transition-all duration-300 hover:shadow-xl">
@@ -226,56 +262,51 @@ use Illuminate\Support\Str;
     <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
         {{ $item->batas_peminjaman->format('Y-m-d') }}
     </td>
-    <td class="px-4 py-4 whitespace-nowrap">
-        @if($item->status == 'Dipinjam')
-        <span class="inline-flex items-center justify-center min-w-[110px] px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg">
-            <i class="fa-solid fa-clock mr-1.5"></i>
-            Dipinjam
-        </span>
-        @elseif($item->status == 'Dikembalikan')
-        <span class="inline-flex items-center justify-center min-w-[110px] px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg">
-            <i class="fa-solid fa-check-circle mr-1.5"></i>
-            Dikembalikan
-        </span>
-        @else
-        <span class="inline-flex items-center justify-center min-w-[110px] px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg animate-pulse">
-            <i class="fa-solid fa-circle-exclamation mr-1.5"></i>
-            Terlambat
-        </span>
-        @endif
-    </td>
+   <td class="px-6 py-4 text-center">
+    @php
+        $statusPeminjamanConfig = [
+            'Dipinjam' => ['bg' => 'bg-yellow-100', 'text' => 'text-yellow-800', 'icon' => 'fa-clock'],
+            'Dikembalikan' => ['bg' => 'bg-green-100', 'text' => 'text-green-800', 'icon' => 'fa-check-circle'],
+            'Terlambat' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'icon' => 'fa-circle-exclamation animate-pulse'],
+        ];
 
-    <td class="px-4 py-4 whitespace-nowrap text-center text-sm">
-        <div class="flex items-center justify-center gap-2">
-            <a href="{{ route('peminjaman.show', $item->id) }}"
-                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg">
-                <i class="fa-solid fa-eye mr-1.5"></i>
-                Lihat Detail
-                </span>
-            </a>
+        $config = $statusPeminjamanConfig[$item->status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'icon' => 'fa-question'];
+    @endphp
 
-            @if ($item->status != 'Dikembalikan')
+    <span class="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-full {{ $config['bg'] }} {{ $config['text'] }} shadow-sm">
+        <i class="fa-solid {{ $config['icon'] }}"></i>
+        {{ $item->status }}
+    </span>
+</td>
+
+<td class="px-4 py-4 text-center text-sm w-[180px]">
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-2">
+
+        {{-- 🔹 Tombol Lihat Detail --}}
+        <a href="{{ route('peminjaman.show', $item->id) }}" 
+            class="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 hover:bg-blue-200 border border-blue-200 transition-all duration-200 shadow-sm w-[110px]">
+            <i class="fa-solid fa-eye text-[11px]"></i>
+            <span class="truncate">Lihat</span>
+        </a>
+
+        {{-- 🔹 Tombol Kembalikan (hanya tampil jika belum dikembalikan) --}}
+        @if ($item->status != 'Dikembalikan')
             <button
                 @click="$dispatch('open-modal-kembalikan', { 
-            id: {{ $item->id }},
-            tanggal_batas: '{{ \Carbon\Carbon::parse($item->tanggal_kembali)->format('Y-m-d') }}'
-        })"
-                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg">
-                <i class="fa-solid fa-rotate-left mr-1.5"></i>
-                Kembalikan
-                </span>
+                    id: {{ $item->id }},
+                    tanggal_batas: '{{ \Carbon\Carbon::parse($item->tanggal_kembali)->format('Y-m-d') }}'
+                })"
+                class="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold 
+                bg-green-100 text-green-800 hover:bg-green-200 border border-green-200 transition-all duration-200 shadow-sm w-[110px]">
+                <i class="fa-solid fa-rotate-left text-[11px]"></i>
+                <span class="truncate">Kembalikan</span>
             </button>
-            @endif
+        @endif
+
+    </div>
+</td>
 
 
-            <!-- Detail Section -->
-
-
-
-
-
-        </div>
-    </td>
     </tr>
     @empty
     <tr>

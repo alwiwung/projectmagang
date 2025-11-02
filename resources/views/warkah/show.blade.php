@@ -61,6 +61,16 @@
                     </div>
                 </div>
 
+                <!-- Ruangan -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">
+                        <i class="fa-solid fa-hashtag mr-1"></i> Ruangan
+                    </label>
+                    <div class="bg-gray-50 px-4 py-3 rounded-lg">
+                        <p class="text-gray-900 font-medium">{{ $warkah->lokasi ?? '-' }}</p>
+                    </div>
+                </div>
+
                 <!-- Uraian Informasi Arsip -->
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-600 mb-2">

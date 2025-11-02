@@ -17,6 +17,7 @@ class Warkah extends Model
         'kode_klasifikasi',
         'jenis_arsip_vital',
         'nomor_item_arsip',
+        'lokasi',
         'uraian_informasi_arsip',
         'kurun_waktu_berkas',
         'media',
@@ -117,4 +118,10 @@ class Warkah extends Model
     {
         return $this->status === 'Dipinjam';
     }
+
+    public function peminjamanTerakhir()
+{
+    return $this->hasOne(\App\Models\PeminjamanWarkah::class, 'id_warkah')
+                ->latest('created_at');
+}
 }

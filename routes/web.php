@@ -88,6 +88,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/kembalikan', [PeminjamanController::class, 'kembalikan'])->name('kembalikan');
         Route::get('/api/available-warkah', [PeminjamanController::class, 'getAvailableWarkah'])->name('api.available-warkah');
         Route::get('/{id}/whatsapp-message', [PeminjamanController::class, 'generateWhatsAppMessage'])->name('whatsapp-message');
+
+         // Export Routes
+        Route::get('/export/excel', [PeminjamanController::class, 'exportExcel'])->name('export.excel');
     });
 
     /*
@@ -108,6 +111,10 @@ Route::middleware('auth')->group(function () {
         // File routes
         Route::get('/{id}/file/{type}', [PermintaanController::class, 'lihatFile'])->name('lihatFile');
         Route::get('/{id}/download/{type}', [PermintaanController::class, 'downloadFile'])->name('downloadFile');
+
+         
+        // Export Route - Excel Only
+        Route::get('/export/excel', [PermintaanController::class, 'exportExcel'])->name('export.excel');
 
         // File content (tampilkan file di browser)
         Route::get('/{id}/file-content/{type}', function ($id, $type) {
