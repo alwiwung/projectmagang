@@ -370,6 +370,5 @@ use Illuminate\Support\Str;
         </div>
         @endforelse
     </div>
-
 </div>
 @endsection

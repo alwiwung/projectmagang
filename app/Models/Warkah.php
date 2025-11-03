@@ -108,7 +108,7 @@ class Warkah extends Model
     // Relasi peminjaman aktif
     public function peminjamanAktif()
     {
-        return $this->hasOne(PeminjamanWarkah::class, 'id_warkah')
+        return $this->hasOne(PeminjamanWarkah::class, 'id_warkah', 'id')
             ->where('status', 'Dipinjam')
             ->latest();
     }
@@ -119,9 +119,9 @@ class Warkah extends Model
         return $this->status === 'Dipinjam';
     }
 
-    public function peminjamanTerakhir()
-{
-    return $this->hasOne(\App\Models\PeminjamanWarkah::class, 'id_warkah')
-                ->latest('created_at');
-}
+   public function peminjamanTerakhir()
+    {
+        return $this->hasOne(PeminjamanWarkah::class, 'id_warkah', 'id')
+                    ->latest('tanggal_pinjam');
+    }
 }

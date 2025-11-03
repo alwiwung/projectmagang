@@ -6,15 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up()
-    {
-        Schema::table('peminjaman_warkah', function (Blueprint $table) {
-            // ✅ Tambahkan ->nullable() langsung saat membuat kolom
+    public function up(): void
+{
+    Schema::table('peminjaman_warkah', function (Blueprint $table) {
+        // Pastikan hanya tambahkan kolom yang belum ada
+        if (!Schema::hasColumn('peminjaman_warkah', 'nomor_nota_dinas')) {
             $table->string('nomor_nota_dinas')->nullable()->after('catatan');
+        }
+        if (!Schema::hasColumn('peminjaman_warkah', 'file_nota_dinas')) {
             $table->string('file_nota_dinas')->nullable()->after('nomor_nota_dinas');
+        }
+        if (!Schema::hasColumn('peminjaman_warkah', 'uraian')) {
             $table->text('uraian')->nullable()->after('file_nota_dinas');
-        });
-    }
+        }
+    });
+}
 
     public function down()
     {

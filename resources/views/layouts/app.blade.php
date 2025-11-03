@@ -315,12 +315,44 @@
                 </div>
                 @endif
 
-                @if (session('success'))
-                <div class="mb-4 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start">
-                    <i class="fa-solid fa-circle-check text-green-600 mt-1 mr-3"></i>
-                    <p class="text-green-800">{{ session('success') }}</p>
+                            {{-- ✅ Flash Message (Sukses / Error) --}}
+                @if(session('success'))
+                <div class="p-4 mb-6 rounded-xl border-l-4 border-green-600 bg-gradient-to-r from-green-50 to-green-100 shadow-md animate-fade-in">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <i class="fa-solid fa-circle-check text-green-600 text-2xl mr-3 mt-1"></i>
+                        </div>
+                        <div class="flex-1 text-gray-800" style="white-space: normal;">
+                            {!! session('success') !!}
+                        </div>
+                        <button type="button" onclick="this.parentElement.parentElement.remove()" class="ml-4 text-green-700 hover:text-green-900">
+                            <i class="fa-solid fa-xmark text-lg"></i>
+                        </button>
+                    </div>
                 </div>
                 @endif
+
+                @if($errors->any())
+                <div class="p-4 mb-6 rounded-xl border-l-4 border-red-600 bg-gradient-to-r from-red-50 to-red-100 shadow-md animate-fade-in">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <i class="fa-solid fa-triangle-exclamation text-red-600 text-2xl mr-3 mt-1"></i>
+                        </div>
+                        <div class="flex-1 text-gray-800" style="white-space: normal;">
+                            {!! implode('<br>', $errors->all()) !!}
+                        </div>
+                        <button type="button" onclick="this.parentElement.parentElement.remove()" class="ml-4 text-red-700 hover:text-red-900">
+                            <i class="fa-solid fa-xmark text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+                @endif
+
+                <script>
+                    setTimeout(() => {
+                        document.querySelectorAll('.animate-fade-in').forEach(alert => alert.remove());
+                    }, 7000);
+                </script>
 
                 @yield('content')
             </div>

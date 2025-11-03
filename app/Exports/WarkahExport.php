@@ -45,10 +45,10 @@ class WarkahExport implements FromCollection, WithHeadings, WithMapping, WithSty
             'Jangka Simpan Aktif',
             'Jangka Simpan Inaktif',
             'Tingkat Perkembangan',
-            'Lokasi Ruangan Warkah',
-            'Ruang Penyimpanan / Rak',
-            'No. Boks Definitif',
-            'No. Folder',
+            'Ruangan',
+            'Ruang Penyimpanan Rak',
+            'No Boks Definitif',
+            'No Folder',
             'Metode Perlindungan',
             'Keterangan',
             'Status',
@@ -70,37 +70,47 @@ class WarkahExport implements FromCollection, WithHeadings, WithMapping, WithSty
         // 🔸 Tampilkan data peminjaman hanya jika status = Dipinjam atau Terlambat
         $showBorrowerData = in_array($item->status, ['Dipinjam', 'Terlambat']);
 
-        $namaPeminjam = $showBorrowerData
-            ? ($peminjaman?->nama_peminjam ?? '-')
+        $namaPeminjam = $showBorrowerData && $peminjaman
+            ? ($peminjaman->nama_peminjam ?? '-')
             : '-';
 
-        $nomorNotaDinas = $showBorrowerData
-            ? ($peminjaman?->nomor_nota_dinas ?? '-')
+        $nomorNotaDinas = $showBorrowerData && $peminjaman
+            ? ($peminjaman->nomor_nota_dinas ?? '-')
             : '-';
 
-        $fileNotaDinas = $showBorrowerData && $peminjaman?->file_nota_dinas
-            ? url('storage/' . $peminjaman->file_nota_dinas)
-            : '-';
+        // Fix: Cek apakah file sudah full URL atau masih path relatif
+        $fileNotaDinas = '-';
+        if ($showBorrowerData && $peminjaman && $peminjaman->file_nota_dinas) {
+            $filePath = $peminjaman->file_nota_dinas;
+            
+            // Jika sudah full URL (http/https), gunakan langsung
+            if (str_starts_with($filePath, 'http://') || str_starts_with($filePath, 'https://')) {
+                $fileNotaDinas = $filePath;
+            } else {
+                // Jika masih path storage, convert ke URL
+                $fileNotaDinas = url('storage/' . ltrim($filePath, '/'));
+            }
+        }
 
         return [
             $this->rowNumber,
-            $item->kode_klasifikasi,
-            $item->jenis_arsip_vital,
-            $item->nomor_item_arsip,
-            $item->uraian_informasi_arsip,
-            $item->kurun_waktu_berkas,
-            $item->media,
-            $item->jumlah,
-            $item->jangka_simpan_aktif,
-            $item->jangka_simpan_inaktif,
-            $item->tingkat_perkembangan,
+            $item->kode_klasifikasi ?? '-',
+            $item->jenis_arsip_vital ?? '-',
+            $item->nomor_item_arsip ?? '-',
+            $item->uraian_informasi_arsip ?? '-',
+            $item->kurun_waktu_berkas ?? '-',
+            $item->media ?? '-',
+            $item->jumlah ?? '-',
+            $item->jangka_simpan_aktif ?? '-',
+            $item->jangka_simpan_inaktif ?? '-',
+            $item->tingkat_perkembangan ?? '-',
             $item->lokasi ?? '-',
-            $item->ruang_penyimpanan_rak,
-            $item->no_boks_definitif,
-            $item->no_folder,
-            $item->metode_perlindungan,
-            $item->keterangan,
-            $item->status,
+            $item->ruang_penyimpanan_rak ?? '-',
+            $item->no_boks_definitif ?? '-',
+            $item->no_folder ?? '-',
+            $item->metode_perlindungan ?? '-',
+            $item->keterangan ?? '-',
+            $item->status ?? 'Tersedia',
             $namaPeminjam,
             $nomorNotaDinas,
             $fileNotaDinas,
@@ -154,8 +164,8 @@ class WarkahExport implements FromCollection, WithHeadings, WithMapping, WithSty
 
         // Wrap text untuk kolom panjang
         $sheet->getStyle("E2:E{$lastRow}")->getAlignment()->setWrapText(true); // Uraian Informasi Arsip
-        $sheet->getStyle("L2:L{$lastRow}")->getAlignment()->setWrapText(true); // Lokasi Ruangan
-        $sheet->getStyle("M2:M{$lastRow}")->getAlignment()->setWrapText(true); // Ruang Penyimpanan / Rak
+        $sheet->getStyle("L2:L{$lastRow}")->getAlignment()->setWrapText(true); // Ruangan
+        $sheet->getStyle("M2:M{$lastRow}")->getAlignment()->setWrapText(true); // Ruang Penyimpanan Rak
         $sheet->getStyle("P2:P{$lastRow}")->getAlignment()->setWrapText(true); // Metode Perlindungan
         $sheet->getStyle("Q2:Q{$lastRow}")->getAlignment()->setWrapText(true); // Keterangan
         $sheet->getStyle("U2:U{$lastRow}")->getAlignment()->setWrapText(true); // File Nota Dinas
@@ -163,7 +173,7 @@ class WarkahExport implements FromCollection, WithHeadings, WithMapping, WithSty
         // Set tinggi baris header
         $sheet->getRowDimension(1)->setRowHeight(30);
 
-        // Color coding untuk status (optional - bisa dihapus jika tidak diperlukan)
+        // Color coding untuk status
         for ($row = 2; $row <= $lastRow; $row++) {
             $statusCell = $sheet->getCell("R{$row}");
             $status = $statusCell->getValue();

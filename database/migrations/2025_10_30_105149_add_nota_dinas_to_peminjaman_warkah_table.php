@@ -6,22 +6,33 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-   public function up()
-{
-    Schema::table('peminjaman_warkah', function (Blueprint $table) {
-        $table->string('nomor_nota_dinas')->after('batas_peminjaman');
-        $table->string('file_nota_dinas')->nullable()->after('nomor_nota_dinas');
-        $table->text('uraian_nota_dinas')->nullable()->after('file_nota_dinas');
-    });
-}
+    public function up(): void
+    {
+        Schema::table('peminjaman_warkah', function (Blueprint $table) {
+            if (!Schema::hasColumn('peminjaman_warkah', 'nomor_nota_dinas')) {
+                $table->string('nomor_nota_dinas')->after('batas_peminjaman');
+            }
+            if (!Schema::hasColumn('peminjaman_warkah', 'file_nota_dinas')) {
+                $table->string('file_nota_dinas')->nullable()->after('nomor_nota_dinas');
+            }
+            if (!Schema::hasColumn('peminjaman_warkah', 'uraian_nota_dinas')) {
+                $table->text('uraian_nota_dinas')->nullable()->after('file_nota_dinas');
+            }
+        });
+    }
 
-public function down()
-{
-    Schema::table('peminjaman_warkah', function (Blueprint $table) {
-        $table->dropColumn(['nomor_nota_dinas', 'file_nota_dinas', 'uraian_nota_dinas']);
-    });
-}
+    public function down(): void
+    {
+        Schema::table('peminjaman_warkah', function (Blueprint $table) {
+            if (Schema::hasColumn('peminjaman_warkah', 'nomor_nota_dinas')) {
+                $table->dropColumn('nomor_nota_dinas');
+            }
+            if (Schema::hasColumn('peminjaman_warkah', 'file_nota_dinas')) {
+                $table->dropColumn('file_nota_dinas');
+            }
+            if (Schema::hasColumn('peminjaman_warkah', 'uraian_nota_dinas')) {
+                $table->dropColumn('uraian_nota_dinas');
+            }
+        });
+    }
 };
