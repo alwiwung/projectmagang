@@ -298,22 +298,6 @@
         <!-- 📦 Main Content -->
         <main class="flex-grow">
             <div class="max-w-7xl mx-auto py-6 sm:py-10 px-4 sm:px-6 lg:px-8">
-                <!-- Flash Messages -->
-                @if ($errors->any())
-                <div class="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
-                    <div class="flex items-start">
-                        <i class="fa-solid fa-circle-exclamation text-red-600 mt-1 mr-3"></i>
-                        <div>
-                            <h3 class="font-semibold text-red-800">Terjadi Kesalahan</h3>
-                            <ul class="mt-2 text-sm text-red-700 space-y-1">
-                                @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                @endif
 
                             {{-- ✅ Flash Message (Sukses / Error) --}}
                 @if(session('success'))
@@ -348,11 +332,11 @@
                 </div>
                 @endif
 
-                <script>
+                {{-- <script>
                     setTimeout(() => {
                         document.querySelectorAll('.animate-fade-in').forEach(alert => alert.remove());
                     }, 7000);
-                </script>
+                </script> --}}
 
                 @yield('content')
             </div>

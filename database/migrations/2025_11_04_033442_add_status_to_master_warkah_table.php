@@ -10,7 +10,8 @@ return new class extends Migration
     {
         Schema::table('master_warkah', function (Blueprint $table) {
             if (!Schema::hasColumn('master_warkah', 'status')) {
-                $table->string('status')->default('Tersedia')->after('file_nota_dinas');
+                // Tambahkan tanpa after() agar lebih aman
+                $table->string('status', 50)->default('Tersedia');
             }
         });
     }
@@ -18,7 +19,9 @@ return new class extends Migration
     public function down()
     {
         Schema::table('master_warkah', function (Blueprint $table) {
-            $table->dropColumn('status');
+            if (Schema::hasColumn('master_warkah', 'status')) {
+                $table->dropColumn('status');
+            }
         });
     }
 };

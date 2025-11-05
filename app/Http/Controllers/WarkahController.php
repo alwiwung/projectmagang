@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 class WarkahController extends Controller
 {
     /**
-     * Tampilkan daftar arsip
+     * Tampilkan daftar arsip 
      */
     public function index(Request $request)
     {
@@ -205,371 +205,393 @@ class WarkahController extends Controller
         return Excel::download(new WarkahExport($filters), $fileName);
     }
 
-    public function import(Request $request)
-    {
-        $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv',
-        ]);
+public function import(Request $request)
+{
+    $request->validate([
+        'file' => 'required|mimes:xlsx,xls,csv',
+    ]);
 
-        try {
-            $file = $request->file('file');
-            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getRealPath());
-            $sheet = $spreadsheet->getActiveSheet();
-            $rows = $sheet->toArray(null, true, true, true);
+    try {
+        $file = $request->file('file');
+        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getRealPath());
+        $sheet = $spreadsheet->getActiveSheet();
+        $rows = $sheet->toArray(null, true, true, true);
 
-            // 🧭 Deteksi baris header utama
-            $headerRowIndex = null;
-            foreach ($rows as $i => $row) {
-                $rowText = strtolower(implode(' ', $row));
-                if (str_contains($rowText, 'kode klasifikasi') || str_contains($rowText, 'uraian informasi arsip')) {
-                    $headerRowIndex = $i;
-                    break;
-                }
-            }
-
-            if (!$headerRowIndex) {
-                return back()->withErrors([
-                    'file' => '❌ Header tidak ditemukan di file Excel. Pastikan ada kolom seperti "Kode Klasifikasi" dan "Uraian Informasi Arsip".'
-                ]);
-            }
-
-            // 🧩 Gabungkan dua baris header (header utama + subheader) jika ada
-            $headerRow = $rows[$headerRowIndex];
-            $nextRow = $rows[$headerRowIndex + 1] ?? [];
-
-            $mergedHeaderRow = [];
-            foreach ($headerRow as $col => $val) {
-                $top = trim($val ?? '');
-                $bottom = trim($nextRow[$col] ?? '');
-                
-                if (empty($bottom) || strtolower($top) === strtolower($bottom)) {
-                    $merged = $top;
-                } else {
-                    $merged = trim($top . ' ' . $bottom);
-                }
-                
-                $mergedHeaderRow[$col] = $merged;
-            }
-
-            // 🔠 Normalisasi nama header dengan mapping fleksibel
-            $headers = [];
-            foreach ($mergedHeaderRow as $key => $val) {
-                $normalized = strtolower(trim(preg_replace('/\s+/', ' ', $val ?? '')));
-                $headers[$key] = $this->mapHeaderName($normalized);
-            }
-
-            // ✅ Validasi header wajib
-            $requiredHeaders = ['kode_klasifikasi', 'uraian_informasi_arsip'];
-            $missing = [];
-            foreach ($requiredHeaders as $req) {
-                if (!in_array($req, $headers)) {
-                    $missing[] = $req;
-                }
-            }
-
-            if (!empty($missing)) {
-                $detectedHeaders = implode(', ', array_unique($headers));
-                return back()->withErrors([
-                    'file' => '❌ Format file tidak sesuai. Header berikut tidak ditemukan: ' . implode(', ', $missing) . 
-                            '<br><small>Header terdeteksi: ' . $detectedHeaders . '</small>'
-                ]);
-            }
-
-            $inserted = 0;
-            $duplicates = 0;
-            $skipped = 0;
-            $errors = [];
-            $debugInfo = []; // ✅ Untuk debugging
-
-            // 🔁 Deteksi baris data pertama
-            $dataStartRow = $headerRowIndex + 1;
+        // ⚠️ STEP 1: VALIDASI AWAL - CEK HEADER PEMINJAMAN DAN PERMINTAAN
+        $isPeminjamanFile = false;
+        $isPermintaanFile = false;
+        $detectedPeminjamanHeaders = [];
+        $detectedPermintaanHeaders = [];
+        
+        foreach ($rows as $row) {
+            $rowText = strtolower(implode(' ', array_map('trim', $row)));
             
-            for ($testRow = $headerRowIndex + 1; $testRow <= $headerRowIndex + 5; $testRow++) {
-                if (!isset($rows[$testRow])) continue;
+            // Cek header peminjaman
+            if (str_contains($rowText, 'tanggal pinjam') || 
+                str_contains($rowText, 'tanggalpinjam') ||
+                str_contains($rowText, 'tujuan pinjam') || 
+                str_contains($rowText, 'tujuanpinjam') ||
+                str_contains($rowText, 'batas peminjaman') ||
+                str_contains($rowText, 'bataspeminjaman') ||
+                (str_contains($rowText, 'email') && str_contains($rowText, 'peminjam')) ||
+                (str_contains($rowText, 'no hp') && str_contains($rowText, 'peminjam')) ||
+                (str_contains($rowText, 'no. hp') && str_contains($rowText, 'peminjam'))) {
                 
-                $testData = $rows[$testRow];
-                $testText = strtolower(implode(' ', $testData));
+                $isPeminjamanFile = true;
                 
-                if (str_contains($testText, 'kode klasifikasi') || 
-                    str_contains($testText, 'uraian informasi') ||
-                    str_contains($testText, 'jenis arsip') ||
-                    str_contains($testText, 'nomor item')) {
-                    continue;
-                }
-                
-                $hasContent = false;
-                foreach ($testData as $cell) {
-                    if (!empty(trim($cell ?? ''))) {
-                        $hasContent = true;
-                        break;
-                    }
-                }
-                
-                if (!$hasContent) {
-                    continue;
-                }
-                
-                $tempHeaders = [];
-                foreach ($headers as $col => $headerName) {
-                    $tempHeaders[$headerName] = trim($testData[$col] ?? '');
-                }
-                
-                if (!empty($tempHeaders['kode_klasifikasi']) || !empty($tempHeaders['uraian_informasi_arsip'])) {
-                    $dataStartRow = $testRow;
-                    break;
-                }
-            }
-
-            for ($i = $dataStartRow; $i <= count($rows); $i++) {
-                $row = $rows[$i] ?? [];
-                
-                $hasData = false;
                 foreach ($row as $cell) {
-                    if (!empty(trim($cell ?? ''))) {
-                        $hasData = true;
-                        break;
+                    $cellLower = strtolower(trim($cell ?? ''));
+                    if (str_contains($cellLower, 'tanggal pinjam') || 
+                        str_contains($cellLower, 'tujuan pinjam') ||
+                        str_contains($cellLower, 'batas peminjaman') ||
+                        (str_contains($cellLower, 'email') && !str_contains($cellLower, 'kode')) ||
+                        (str_contains($cellLower, 'no hp') || str_contains($cellLower, 'no. hp'))) {
+                        $detectedPeminjamanHeaders[] = trim($cell);
                     }
                 }
-                
-                if (!$hasData) {
-                    continue;
-                }
-
-                $data = [];
-                foreach ($headers as $col => $headerName) {
-                    // Bersihkan data dari spasi, tab, newline, dan karakter whitespace lainnya
-                    $value = $row[$col] ?? '';
-                    $cleanValue = trim(preg_replace('/\s+/', ' ', $value));
-                    
-                    // ✅ PERBAIKAN: Anggap '-' sebagai data kosong
-                    if ($cleanValue === '-') {
-                        $cleanValue = '';
-                    }
-                    
-                    $data[$headerName] = $cleanValue;
-                }
-
-                if (empty($data['kode_klasifikasi']) && empty($data['uraian_informasi_arsip'])) {
-                    $skipped++;
-                    $errors[] = "Baris {$i}: Data wajib kosong";
-                    continue;
-                }
-
-                // 🔍 Cek duplikat berdasarkan kode_klasifikasi dan uraian
-                $exists = Warkah::where('kode_klasifikasi', $data['kode_klasifikasi'] ?? null)
-                    ->where('uraian_informasi_arsip', $data['uraian_informasi_arsip'] ?? null)
-                    ->first();
-
-                if ($exists) {
-                    // ✅ UPDATE: Validasi ketat untuk data peminjaman baru
-                    $namaPeminjamValid = isset($data['nama_peminjam']) && 
-                                        $data['nama_peminjam'] !== '' && 
-                                        $data['nama_peminjam'] !== null &&
-                                        $data['nama_peminjam'] !== '-' &&
-                                        strlen(trim($data['nama_peminjam'])) > 0;
-                    
-                    $notaDinasValid = isset($data['nomor_nota_dinas']) && 
-                                     $data['nomor_nota_dinas'] !== '' && 
-                                     $data['nomor_nota_dinas'] !== null &&
-                                     $data['nomor_nota_dinas'] !== '-' &&
-                                     strlen(trim($data['nomor_nota_dinas'])) > 0;
-                    
-                    // ⚠️ Auto-fix: Deteksi URL di kolom nomor nota dinas
-                    if ($notaDinasValid && strlen($data['nomor_nota_dinas']) > 50) {
-                        if (str_starts_with($data['nomor_nota_dinas'], 'http://') || 
-                            str_starts_with($data['nomor_nota_dinas'], 'https://')) {
-                            $notaDinasValid = false;
-                            if (empty($data['file_nota_dinas'])) {
-                                $data['file_nota_dinas'] = $data['nomor_nota_dinas'];
-                            }
-                            $data['nomor_nota_dinas'] = '';
-                        }
-                    }
-                    
-                    $hasPeminjamanBaru = $namaPeminjamValid || $notaDinasValid;
-                    
-                    if ($hasPeminjamanBaru) {
-                        // Update status warkah jika perlu
-                        if ($exists->status !== 'Dipinjam') {
-                            $exists->update(['status' => 'Dipinjam']);
-                        }
-
-                        // Cari peminjaman aktif
-                        $peminjamanAktif = PeminjamanWarkah::where('id_warkah', $exists->id)
-                            ->where('status', 'Dipinjam')
-                            ->first();
-
-                        if ($peminjamanAktif) {
-                            // Update peminjaman yang sudah ada
-                            $peminjamanAktif->update([
-                                'nama_peminjam'     => $data['nama_peminjam'] ?? $peminjamanAktif->nama_peminjam,
-                                'nomor_nota_dinas'  => $data['nomor_nota_dinas'] ?? $peminjamanAktif->nomor_nota_dinas,
-                                'file_nota_dinas'   => $data['file_nota_dinas'] ?? $peminjamanAktif->file_nota_dinas,
-                            ]);
-                        } else {
-                            // Buat peminjaman baru
-                            PeminjamanWarkah::create([
-                                'id_warkah'         => $exists->id,
-                                'nama_peminjam'     => $data['nama_peminjam'] ?? null,
-                                'nomor_nota_dinas'  => $data['nomor_nota_dinas'] ?? null,
-                                'file_nota_dinas'   => $data['file_nota_dinas'] ?? null,
-                                'tanggal_pinjam'    => now()->toDateString(),
-                                'batas_peminjaman'  => now()->addDays(30)->toDateString(),
-                                'status'            => 'Dipinjam',
-                                'tujuan_pinjam'     => 'Import dari Excel',
-                            ]);
-                        }
-                    }
-                    
-                    $duplicates++;
-                    continue;
-                }
-
-                // ✅ Tentukan status berdasarkan data peminjaman yang BENAR-BENAR VALID
-                // Cek dengan sangat ketat: tidak kosong DAN bukan hanya whitespace DAN bukan karakter '-'
-                $namaPeminjamValid = isset($data['nama_peminjam']) && 
-                                    $data['nama_peminjam'] !== '' && 
-                                    $data['nama_peminjam'] !== null &&
-                                    $data['nama_peminjam'] !== '-' &&
-                                    strlen(trim($data['nama_peminjam'])) > 0;
-                
-                $notaDinasValid = isset($data['nomor_nota_dinas']) && 
-                                 $data['nomor_nota_dinas'] !== '' && 
-                                 $data['nomor_nota_dinas'] !== null &&
-                                 $data['nomor_nota_dinas'] !== '-' &&
-                                 strlen(trim($data['nomor_nota_dinas'])) > 0;
-                
-                // ⚠️ Peringatan: Jika nomor nota terlalu panjang (>50 karakter), kemungkinan itu URL
-                if ($notaDinasValid && strlen($data['nomor_nota_dinas']) > 50) {
-                    // Cek apakah ini URL
-                    if (str_starts_with($data['nomor_nota_dinas'], 'http://') || 
-                        str_starts_with($data['nomor_nota_dinas'], 'https://')) {
-                        // Ini URL, bukan nomor nota dinas - abaikan untuk validasi peminjaman
-                        $notaDinasValid = false;
-                        
-                        // Pindahkan ke kolom file_nota_dinas jika kolom tersebut kosong
-                        if (empty($data['file_nota_dinas'])) {
-                            $data['file_nota_dinas'] = $data['nomor_nota_dinas'];
-                        }
-                        
-                        // Kosongkan nomor_nota_dinas
-                        $data['nomor_nota_dinas'] = '';
-                    }
-                }
-                
-                $hasPeminjaman = $namaPeminjamValid || $notaDinasValid;
-                
-                // ✅ Simpan warkah baru (HANYA data warkah, TANPA data peminjaman)
-                $warkah = Warkah::create([
-                    'kode_klasifikasi'        => $data['kode_klasifikasi'] ?? null,
-                    'jenis_arsip_vital'       => $data['jenis_arsip_vital'] ?? null,
-                    'nomor_item_arsip'        => $data['nomor_item_arsip'] ?? null,
-                    'lokasi'                  => $data['lokasi'] ?? null,
-                    'uraian_informasi_arsip'  => $data['uraian_informasi_arsip'] ?? null,
-                    'kurun_waktu_berkas'      => $data['kurun_waktu_berkas'] ?? null,
-                    'media'                   => $data['media'] ?? null,
-                    'jumlah'                  => $data['jumlah'] ?? null,
-                    'jangka_simpan_aktif'     => $data['jangka_simpan_aktif'] ?? null,
-                    'jangka_simpan_inaktif'   => $data['jangka_simpan_inaktif'] ?? null,
-                    'tingkat_perkembangan'    => $data['tingkat_perkembangan'] ?? null,
-                    'ruang_penyimpanan_rak'   => $data['ruang_penyimpanan_rak'] ?? null,
-                    'no_boks_definitif'       => $data['no_boks_definitif'] ?? null,
-                    'no_folder'               => $data['no_folder'] ?? null,
-                    'metode_perlindungan'     => $data['metode_perlindungan'] ?? null,
-                    'keterangan'              => $data['keterangan'] ?? null,
-                    'status'                  => $hasPeminjaman ? 'Dipinjam' : 'Tersedia',
-                    'created_by'              => auth()->id(),
-                ]);
-
-                $inserted++;
-
-                // 📋 Simpan data peminjaman HANYA jika kolom peminjaman benar-benar terisi
-                if ($hasPeminjaman) {
-                    try {
-                        PeminjamanWarkah::create([
-                            'id_warkah'         => $warkah->id,
-                            'nama_peminjam'     => $data['nama_peminjam'] ?? null,
-                            'nomor_nota_dinas'  => $data['nomor_nota_dinas'] ?? null,
-                            'file_nota_dinas'   => $data['file_nota_dinas'] ?? null,
-                            'tanggal_pinjam'    => now()->toDateString(),
-                            'batas_peminjaman'  => now()->addDays(30)->toDateString(),
-                            'status'            => 'Dipinjam',
-                            'tujuan_pinjam'     => 'Import dari Excel',
-                        ]);
-                    } catch (\Exception $e) {
-                        Log::warning("Gagal menyimpan data peminjaman untuk warkah ID {$warkah->id}: " . $e->getMessage());
-                    }
-                }
+                break;
             }
-
-           $message = "
-    <div style='font-size:14px; line-height:1.6;'>
-        <strong>✅ Import selesai!</strong><br>
-        <ul style='margin:8px 0 12px 20px;'>
-            <li><strong>Data baru:</strong> {$inserted}</li>
-            <li><strong>Duplikat diupdate:</strong> {$duplicates}</li>
-            <li><strong>Dilewati:</strong> {$skipped}</li>
-        </ul>
-";
-
-if (!empty($debugInfo)) {
-    $message .= "
-        <div style='margin-top:12px;'>
-            <strong>🔍 Debug Info (5 data pertama):</strong>
-            <table border='1' cellpadding='5' cellspacing='0' style='border-collapse:collapse; font-size:12px; margin-top:8px; width:100%;'>
-                <thead style='background:#f2f2f2;'>
-                    <tr>
-                        <th>Baris</th>
-                        <th>Kode</th>
-                        <th>Nama Peminjam</th>
-                        <th>Pjg Nama</th>
-                        <th>No Nota</th>
-                        <th>Pjg Nota</th>
-                        <th>Ada Peminjaman?</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-    ";
-
-    foreach ($debugInfo as $info) {
-                    $message .= "
-                        <tr>
-                            <td>{$info['baris']}</td>
-                            <td>{$info['kode']}</td>
-                            <td>" . htmlspecialchars($info['nama_peminjam']) . "</td>
-                            <td>{$info['nama_peminjam_length']}</td>
-                            <td>" . htmlspecialchars($info['nomor_nota']) . "</td>
-                            <td>{$info['nomor_nota_length']}</td>
-                            <td>" . ($info['hasPeminjaman'] === 'YA' ? '✅ Ya' : '❌ Tidak') . "</td>
-                            <td><strong>{$info['status_akan_diset']}</strong></td>
-                        </tr>
-                    ";
+            
+            // 🆕 CEK HEADER PERMINTAAN
+            if (str_contains($rowText, 'nama pemohon') || 
+                str_contains($rowText, 'namapemohon') ||
+                str_contains($rowText, 'nomor identitas') || 
+                str_contains($rowText, 'nomoridentitas') ||
+                str_contains($rowText, 'alamat lengkap') ||
+                str_contains($rowText, 'alamatlengkap') ||
+                str_contains($rowText, 'tanggal permintaan') ||
+                str_contains($rowText, 'tanggalpermintaan') ||
+                str_contains($rowText, 'jumlah salinan') ||
+                str_contains($rowText, 'jumlahsalinan') ||
+                (str_contains($rowText, 'instansi') && str_contains($rowText, 'pemohon'))) {
+                
+                $isPermintaanFile = true;
+                
+                foreach ($row as $cell) {
+                    $cellLower = strtolower(trim($cell ?? ''));
+                    if (str_contains($cellLower, 'nama pemohon') || 
+                        str_contains($cellLower, 'nomor identitas') ||
+                        str_contains($cellLower, 'alamat lengkap') ||
+                        str_contains($cellLower, 'tanggal permintaan') ||
+                        str_contains($cellLower, 'jumlah salinan') ||
+                        str_contains($cellLower, 'instansi') ||
+                        str_contains($cellLower, 'nomor telepon')) {
+                        $detectedPermintaanHeaders[] = trim($cell);
+                    }
                 }
-
-                $message .= "</tbody></table></div>";
+                break;
             }
-
-            if (!empty($errors) && $inserted === 0) {
-                $message .= "
-                    <div style='margin-top:12px; color:#b71c1c;'>
-                        <strong>⚠️ Detail Error (5 baris pertama):</strong><br>
-                        <small>" . implode('<br>', array_slice($errors, 0, 5)) . "</small>
-                    </div>
-                ";
-            }
-
-            $message .= "</div>";
-
-            return back()->with('success', $message);
-
-        } catch (\Exception $e) {
+        }
+        
+        // 🚫 BLOKIR FILE PEMINJAMAN
+        if ($isPeminjamanFile) {
+            $headerList = !empty($detectedPeminjamanHeaders) 
+                ? implode(', ', array_unique($detectedPeminjamanHeaders)) 
+                : 'Header Peminjaman';
+                
             return back()->withErrors([
-                'file' => 'Terjadi kesalahan saat membaca file: ' . $e->getMessage(),
+                'file' => '
+                <div style="padding: 20px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 8px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 16px;">
+                        <svg style="width: 28px; height: 28px; color: #ff9800; margin-right: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        <strong style="font-size: 18px; color: #856404;">❌ File Excel Ditolak</strong>
+                    </div>
+                    
+                    <div style="background: white; padding: 16px; border-radius: 6px; margin-bottom: 16px; border: 1px solid #ffeaa7;">
+                        <p style="margin: 0 0 10px 0; color: #333; font-size: 15px; line-height: 1.6;">
+                            File Excel yang Anda upload adalah <strong style="color: #d97706;">File Data Peminjaman</strong>, bukan File Data Warkah.
+                        </p>
+                        <p style="margin: 0; color: #666; font-size: 13px;">
+                            Terdeteksi kolom: <code style="background: #ffebee; padding: 3px 8px; border-radius: 3px; color: #c62828; font-weight: 600; border: 1px solid #ef9a9a;">' . $headerList . '</code>
+                        </p>
+                    </div>
+                </div>'
             ]);
         }
-    }
+        
+        // 🚫 BLOKIR FILE PERMINTAAN
+        if ($isPermintaanFile) {
+            $headerList = !empty($detectedPermintaanHeaders) 
+                ? implode(', ', array_unique($detectedPermintaanHeaders)) 
+                : 'Header Permintaan';
+                
+            return back()->withErrors([
+                'file' => '
+                <div style="padding: 20px; background: #fff3cd; border-left: 4px solid #ff9800; border-radius: 8px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 16px;">
+                        <svg style="width: 28px; height: 28px; color: #ff6f00; margin-right: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        <strong style="font-size: 18px; color: #856404;">❌ File Excel Ditolak</strong>
+                    </div>
+                    
+                    <div style="background: white; padding: 16px; border-radius: 6px; margin-bottom: 16px; border: 1px solid #ffeaa7;">
+                        <p style="margin: 0 0 10px 0; color: #333; font-size: 15px; line-height: 1.6;">
+                            File Excel yang Anda upload adalah <strong style="color: #e65100;">File Data Permintaan</strong>, bukan File Data Warkah.
+                        </p>
+                        <p style="margin: 0; color: #666; font-size: 13px;">
+                            Terdeteksi kolom: <code style="background: #fff3e0; padding: 3px 8px; border-radius: 3px; color: #e65100; font-weight: 600; border: 1px solid #ffb74d;">' . $headerList . '</code>
+                        </p>
+                    </div>
+                </div>'
+            ]);
+        }
 
+        // 🧭 STEP 2: Lanjut deteksi header warkah (hanya jika bukan file peminjaman/permintaan)
+        $headerRowIndex = null;
+        foreach ($rows as $i => $row) {
+            $rowText = strtolower(implode(' ', $row));
+            if (str_contains($rowText, 'kode klasifikasi') || str_contains($rowText, 'uraian informasi arsip')) {
+                $headerRowIndex = $i;
+                break;
+            }
+        }
+
+        if (!$headerRowIndex) {
+            return back()->withErrors([
+                'file' => '
+                <div style="padding: 16px; background: #fee; border-left: 4px solid #dc3545; border-radius: 6px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <svg style="width: 24px; height: 24px; color: #dc3545; margin-right: 10px;" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                        <strong style="font-size: 16px; color: #721c24;">Header Tidak Ditemukan</strong>
+                    </div>
+                    <p style="margin: 0; color: #721c24; font-size: 14px; line-height: 1.5;">
+                        File Excel harus memiliki kolom Yang Sesuai Dengan Excel Warkah
+                    </p>
+                </div>'
+            ]);
+        }
+
+        // 🧩 Gabungkan dua baris header
+        $headerRow = $rows[$headerRowIndex];
+        $nextRow = $rows[$headerRowIndex + 1] ?? [];
+
+        $mergedHeaderRow = [];
+        foreach ($headerRow as $col => $val) {
+            $top = trim($val ?? '');
+            $bottom = trim($nextRow[$col] ?? '');
+            
+            if (empty($bottom) || strtolower($top) === strtolower($bottom)) {
+                $merged = $top;
+            } else {
+                $merged = trim($top . ' ' . $bottom);
+            }
+            
+            $mergedHeaderRow[$col] = $merged;
+        }
+
+        // 🔠 Normalisasi nama header
+        $headers = [];
+        foreach ($mergedHeaderRow as $key => $val) {
+            $normalized = strtolower(trim(preg_replace('/\s+/', ' ', $val ?? '')));
+            $headers[$key] = $this->mapHeaderName($normalized);
+        }
+
+        // ✅ Validasi header wajib
+        $requiredHeaders = ['kode_klasifikasi', 'uraian_informasi_arsip'];
+        $missing = [];
+        foreach ($requiredHeaders as $req) {
+            if (!in_array($req, $headers)) {
+                $missing[] = $req;
+            }
+        }
+
+        if (!empty($missing)) {
+            $detectedHeaders = implode(', ', array_unique($headers));
+            return back()->withErrors([
+                'file' => '
+                <div style="padding: 16px; background: #fee; border-left: 4px solid #dc3545; border-radius: 6px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <svg style="width: 24px; height: 24px; color: #dc3545; margin-right: 10px;" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                        <strong style="font-size: 16px; color: #721c24;">Header Tidak Lengkap</strong>
+                    </div>
+                    <p style="margin: 0 0 10px 0; color: #721c24; font-size: 14px; line-height: 1.5;">
+                        Header berikut tidak ditemukan: <strong>' . implode(', ', $missing) . '</strong>
+                    </p>
+                    <p style="margin: 0; color: #999; font-size: 12px;">
+                        Header terdeteksi: <code style="background: #fff; padding: 2px 6px; border-radius: 3px;">' . $detectedHeaders . '</code>
+                    </p>
+                </div>'
+            ]);
+        }
+
+        $inserted = 0;
+        $duplicates = 0;
+        $skipped = 0;
+        $errors = [];
+
+        // 🔁 Deteksi baris data pertama
+        $dataStartRow = $headerRowIndex + 1;
+        
+        for ($testRow = $headerRowIndex + 1; $testRow <= $headerRowIndex + 5; $testRow++) {
+            if (!isset($rows[$testRow])) continue;
+            
+            $testData = $rows[$testRow];
+            $testText = strtolower(implode(' ', $testData));
+            
+            if (str_contains($testText, 'kode klasifikasi') || 
+                str_contains($testText, 'uraian informasi') ||
+                str_contains($testText, 'jenis arsip') ||
+                str_contains($testText, 'nomor item')) {
+                continue;
+            }
+            
+            $hasContent = false;
+            foreach ($testData as $cell) {
+                if (!empty(trim($cell ?? ''))) {
+                    $hasContent = true;
+                    break;
+                }
+            }
+            
+            if (!$hasContent) {
+                continue;
+            }
+            
+            $tempHeaders = [];
+            foreach ($headers as $col => $headerName) {
+                $tempHeaders[$headerName] = trim($testData[$col] ?? '');
+            }
+            
+            if (!empty($tempHeaders['kode_klasifikasi']) || !empty($tempHeaders['uraian_informasi_arsip'])) {
+                $dataStartRow = $testRow;
+                break;
+            }
+        }
+
+        for ($i = $dataStartRow; $i <= count($rows); $i++) {
+            $row = $rows[$i] ?? [];
+            
+            $hasData = false;
+            foreach ($row as $cell) {
+                if (!empty(trim($cell ?? ''))) {
+                    $hasData = true;
+                    break;
+                }
+            }
+            
+            if (!$hasData) {
+                continue;
+            }
+
+            $data = [];
+            foreach ($headers as $col => $headerName) {
+                $value = $row[$col] ?? '';
+                $cleanValue = trim(preg_replace('/\s+/', ' ', $value));
+                
+                if ($cleanValue === '-') {
+                    $cleanValue = '';
+                }
+                
+                $data[$headerName] = $cleanValue;
+            }
+
+            if (empty($data['kode_klasifikasi']) && empty($data['uraian_informasi_arsip'])) {
+                $skipped++;
+                $errors[] = "Baris {$i}: Data wajib kosong";
+                continue;
+            }
+
+            // 🔍 Cek duplikat
+            $exists = Warkah::where('kode_klasifikasi', $data['kode_klasifikasi'] ?? null)
+                ->where('uraian_informasi_arsip', $data['uraian_informasi_arsip'] ?? null)
+                ->first();
+
+            if ($exists) {
+                $duplicates++;
+                continue;
+            }
+
+            // ✅ Simpan warkah baru - HANYA STATUS TERSEDIA
+            $warkah = Warkah::create([
+                'kode_klasifikasi'        => $data['kode_klasifikasi'] ?? null,
+                'jenis_arsip_vital'       => $data['jenis_arsip_vital'] ?? null,
+                'nomor_item_arsip'        => $data['nomor_item_arsip'] ?? null,
+                'lokasi'                  => $data['lokasi'] ?? null,
+                'uraian_informasi_arsip'  => $data['uraian_informasi_arsip'] ?? null,
+                'kurun_waktu_berkas'      => $data['kurun_waktu_berkas'] ?? null,
+                'media'                   => $data['media'] ?? null,
+                'jumlah'                  => $data['jumlah'] ?? null,
+                'jangka_simpan_aktif'     => $data['jangka_simpan_aktif'] ?? null,
+                'jangka_simpan_inaktif'   => $data['jangka_simpan_inaktif'] ?? null,
+                'tingkat_perkembangan'    => $data['tingkat_perkembangan'] ?? null,
+                'ruang_penyimpanan_rak'   => $data['ruang_penyimpanan_rak'] ?? null,
+                'no_boks_definitif'       => $data['no_boks_definitif'] ?? null,
+                'no_folder'               => $data['no_folder'] ?? null,
+                'metode_perlindungan'     => $data['metode_perlindungan'] ?? null,
+                'keterangan'              => $data['keterangan'] ?? null,
+                'status'                  => 'Tersedia',
+                'created_by'              => auth()->id(),
+            ]);
+
+            $inserted++;
+        }
+
+        $message = "
+        <div style='padding: 20px; background: #d4edda; border-left: 4px solid #28a745; border-radius: 8px;'>
+            <div style='display: flex; align-items: center; margin-bottom: 12px;'>
+                <svg style='width: 24px; height: 24px; color: #28a745; margin-right: 10px;' fill='currentColor' viewBox='0 0 20 20'>
+                    <path fill-rule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z' clip-rule='evenodd'/>
+                </svg>
+                <strong style='font-size: 18px; color: #155724;'>Import Berhasil!</strong>
+            </div>
+            
+            <div style='background: white; padding: 14px; border-radius: 6px; margin-bottom: 12px;'>
+                <table style='width: 100%; font-size: 14px; color: #333;'>
+                    <tr>
+                        <td style='padding: 6px 0; width: 50%;'><strong>✅ Data baru ditambahkan:</strong></td>
+                        <td style='padding: 6px 0; text-align: right; font-weight: 600; color: #28a745;'>{$inserted}</td>
+                    </tr>
+                    <tr>
+                        <td style='padding: 6px 0;'><strong>⚠️ Data duplikat (dilewati):</strong></td>
+                        <td style='padding: 6px 0; text-align: right; font-weight: 600; color: #ffc107;'>{$duplicates}</td>
+                    </tr>
+                    <tr>
+                        <td style='padding: 6px 0; border-top: 1px solid #e0e0e0;'><strong>🗑️ Data kosong (dilewati):</strong></td>
+                        <td style='padding: 6px 0; text-align: right; font-weight: 600; color: #6c757d; border-top: 1px solid #e0e0e0;'>{$skipped}</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <p style='margin: 0; font-size: 13px; color: #155724;'>
+                <strong>Status:</strong> Semua data warkah baru diset sebagai <span style='background: #28a745; color: white; padding: 2px 8px; border-radius: 4px; font-weight: 600;'>Tersedia</span>
+            </p>
+        </div>";
+
+        if (!empty($errors) && $inserted === 0) {
+            $message .= "
+                <div style='margin-top:12px; padding: 14px; background: #f8d7da; border-left: 4px solid #dc3545; border-radius: 6px;'>
+                    <strong style='color: #721c24;'>⚠️ Detail Error (5 baris pertama):</strong><br>
+                    <small style='color: #721c24; font-size: 12px;'>" . implode('<br>', array_slice($errors, 0, 5)) . "</small>
+                </div>
+            ";
+        }
+
+        return back()->with('success', $message);
+
+    } catch (\Exception $e) {
+        return back()->withErrors([
+            'file' => '
+            <div style="padding: 16px; background: #fee; border-left: 4px solid #dc3545; border-radius: 6px;">
+                <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                    <svg style="width: 24px; height: 24px; color: #dc3545; margin-right: 10px;" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                    <strong style="font-size: 16px; color: #721c24;">Terjadi Kesalahan</strong>
+                </div>
+                <p style="margin: 0; color: #721c24; font-size: 14px; line-height: 1.5;">
+                    ' . $e->getMessage() . '
+                </p>
+            </div>'
+        ]);
+    }
+}
     /**
      * 🗺️ Mapping nama header yang fleksibel
      */
