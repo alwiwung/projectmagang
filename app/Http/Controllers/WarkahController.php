@@ -172,24 +172,34 @@ class WarkahController extends Controller
     /**
      * Hapus data warkah
      */
-    public function destroy(Warkah $warkah)
-    {
-        // ✅ Validasi: Hanya warkah dengan status 'Tersedia' yang bisa dihapus
-        if ($warkah->status !== 'Tersedia') {
-            return redirect()->route('warkah.index')
-                ->with('error', "❌ Data warkah tidak dapat dihapus karena sedang berstatus '{$warkah->status}'. Hanya warkah dengan status 'Tersedia' yang dapat dihapus.");
-        }
-
-        try {
-            $warkah->delete();
-
-            return redirect()->route('warkah.index')
-                ->with('success', '✅ Data warkah berhasil dihapus.');
-        } catch (\Exception $e) {
-            return redirect()->route('warkah.index')
-                ->with('error', '❌ Terjadi kesalahan saat menghapus data: ' . $e->getMessage());
-        }
+  public function destroy(Warkah $warkah)
+{
+    // Validasi status
+    if ($warkah->status !== 'Tersedia') {
+        return response()->json([
+            'success' => false,
+            'message' => "Data tidak dapat dihapus karena berstatus '{$warkah->status}'."
+        ], 403);
     }
+
+    try {
+        $info = $warkah->uraian_informasi_arsip;
+        $warkah->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data berhasil dihapus!',
+            'info' => $info
+        ]);
+    } catch (\Exception $e) {
+        \Log::error('Delete error: ' . $e->getMessage());
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal menghapus data.'
+        ], 500);
+    }
+}
 
     public function export(Request $request)
     {

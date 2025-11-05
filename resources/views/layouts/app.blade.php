@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Sistem Arsip Warkah')</title>
 
     <!-- Tailwind & Alpine -->
@@ -16,7 +17,329 @@
     <!-- Favicon -->
     <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
 
+    <!-- SweetAlert2 CSS & JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
+
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
+
+    <!-- Alpine.js Data Component -->
+    <div x-data="{ mobileMenuOpen: false, showProfileModal: false }" x-cloak>
+
+        <!-- Navigation, Profile Modal, Main Content, Footer -->
+        <!-- ... semua konten body Anda di sini ... -->
+
+    </div>
+    <!-- End Alpine.js Data Component -->
+
+    <!-- CSS untuk Animasi -->
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
+        /* Animasi SweetAlert */
+        .animated-popup {
+            animation-duration: 0.5s;
+        }
+
+        .swal-wide {
+            width: 600px !important;
+            max-width: 90% !important;
+        }
+
+        .swal-button {
+            padding: 12px 24px !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            border-radius: 8px !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+        }
+
+        .swal-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+        }
+
+        .swal-button-delete {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+            color: white !important;
+        }
+
+        .spinner-border {
+            display: inline-block;
+            border: 0.25em solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spinner-border 0.75s linear infinite;
+        }
+
+        @keyframes spinner-border {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+
+    <!-- Script untuk SweetAlert2 Delete - LETAKKAN DI SINI (SEBELUM </body>) -->
+   <!-- Script untuk SweetAlert2 Delete - LETAKKAN SEBELUM </body> -->
+<script>
+// Fungsi untuk warning status tidak tersedia
+function showStatusWarning(status) {
+    Swal.fire({
+        icon: 'error',
+        title: '🚫 Tidak Dapat Dihapus!',
+        html: `
+            <div style="text-align: left; padding: 10px;">
+                <p style="font-size: 15px; margin-bottom: 10px; color: #1f2937;">
+                    <strong>Data warkah ini tidak dapat dihapus</strong>
+                </p>
+                <div style="background: #fef3c7; padding: 14px; border-radius: 8px; border-left: 4px solid #f59e0b; margin: 15px 0;">
+                    <p style="margin: 0; font-size: 14px; color: #92400e;">
+                        📊 Status Saat Ini: <strong>${status}</strong>
+                    </p>
+                </div>
+                <div style="background: #dbeafe; padding: 14px; border-radius: 8px; border-left: 4px solid #3b82f6; margin-top: 15px;">
+                    <p style="margin: 0; font-size: 13px; color: #1e40af;">
+                        💡 <strong>Informasi:</strong><br>
+                        Hanya data dengan status <strong>"Tersedia"</strong> yang dapat dihapus dari sistem.
+                    </p>
+                </div>
+            </div>
+        `,
+        confirmButtonText: '<i class="fas fa-check"></i> Mengerti',
+        confirmButtonColor: '#2563eb',
+        customClass: {
+            confirmButton: 'swal-button'
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.btn-delete-warkah').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const warkahInfo = this.dataset.info || 'Data tidak tersedia';
+            const warkahStatus = this.dataset.status;
+            const deleteUrl = this.dataset.url;
+            
+            // Cek status
+            if (warkahStatus !== 'Tersedia') {
+                showStatusWarning(warkahStatus);
+                return;
+            }
+            
+            // Konfirmasi hapus
+            Swal.fire({
+                title: '⚠️ Konfirmasi Penghapusan',
+                html: `
+                    <div style="text-align: left; margin: 15px 0;">
+                        <p style="font-size: 15px; margin-bottom: 15px; color: #1f2937;">
+                            <strong>Anda akan menghapus data warkah berikut:</strong>
+                        </p>
+                        <div style="background: #3b82f6; padding: 16px; border-radius: 10px; margin: 15px 0;">
+                            <p style="margin: 0; color: white; font-size: 14px; line-height: 1.6;">
+                                <i class="fas fa-file-alt" style="margin-right: 8px;"></i>
+                                <strong>${warkahInfo}</strong>
+                            </p>
+                        </div>
+                        <div style="background: #fecaca; padding: 15px; border-radius: 10px; border-left: 4px solid #dc2626;">
+                            <p style="margin: 0; font-size: 14px; color: #991b1b; line-height: 1.6;">
+                                <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+                                <strong>PERINGATAN PENTING:</strong><br>
+                                <span style="font-size: 13px;">
+                                    Data yang sudah dihapus tidak dapat dikembalikan dan akan hilang permanen dari sistem!
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                `,
+                icon: 'warning',
+                iconColor: '#f59e0b',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: '<i class="fas fa-trash-alt"></i> Ya, Hapus Permanen!',
+                cancelButtonText: '<i class="fas fa-times-circle"></i> Batalkan',
+                reverseButtons: true,
+                focusCancel: true,
+                buttonsStyling: true,
+                allowOutsideClick: false,
+                customClass: {
+                    popup: 'swal-popup-custom',
+                    confirmButton: 'swal-button-confirm',
+                    cancelButton: 'swal-button-cancel'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Loading
+                    Swal.fire({
+                        title: '🗑️ Menghapus Data...',
+                        html: '<p style="color: #6b7280; font-size: 14px;">Mohon tunggu sebentar...</p>',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+                    
+                    // Request delete dengan timeout 10 detik
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000);
+                    
+                    fetch(deleteUrl, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        signal: controller.signal
+                    })
+                    .then(response => {
+                        clearTimeout(timeoutId);
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                iconColor: '#10b981',
+                                title: '✅ Berhasil Dihapus!',
+                                html: `
+                                    <div style="text-align: center;">
+                                        <p style="font-size: 14px; color: #374151; margin-bottom: 12px;">
+                                            Data warkah telah berhasil dihapus dari sistem.
+                                        </p>
+                                        <div style="background: #d1fae5; padding: 12px; border-radius: 8px; border-left: 4px solid #10b981;">
+                                            <p style="margin: 0; font-size: 13px; color: #065f46; text-align: left;">
+                                                <i class="fas fa-check-circle"></i> ${data.info || warkahInfo}
+                                            </p>
+                                        </div>
+                                    </div>
+                                `,
+                                confirmButtonText: '<i class="fas fa-check"></i> OK',
+                                confirmButtonColor: '#10b981',
+                                timer: 2000,
+                                timerProgressBar: true,
+                                showConfirmButton: false,
+                                customClass: {
+                                    confirmButton: 'swal-button'
+                                }
+                            }).then(() => location.reload());
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                iconColor: '#dc2626',
+                                title: '❌ Gagal Menghapus!',
+                                html: `
+                                    <p style="font-size: 14px; color: #374151;">${data.message || 'Terjadi kesalahan saat menghapus data.'}</p>
+                                    <p style="font-size: 12px; color: #6b7280; margin-top: 8px;">Silakan coba lagi atau hubungi administrator.</p>
+                                `,
+                                confirmButtonText: '<i class="fas fa-redo"></i> Tutup',
+                                confirmButtonColor: '#dc2626',
+                                customClass: {
+                                    confirmButton: 'swal-button'
+                                }
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        clearTimeout(timeoutId);
+                        if (error.name === 'AbortError') {
+                            Swal.fire({
+                                icon: 'error',
+                                iconColor: '#dc2626',
+                                title: '⏱️ Timeout!',
+                                html: '<p style="font-size: 14px; color: #374151;">Server terlalu lama merespons. Silakan coba lagi.</p>',
+                                confirmButtonText: '<i class="fas fa-redo"></i> Tutup',
+                                confirmButtonColor: '#dc2626',
+                                customClass: {
+                                    confirmButton: 'swal-button'
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                iconColor: '#dc2626',
+                                title: '⚠️ Terjadi Kesalahan!',
+                                html: '<p style="font-size: 14px; color: #374151;">Tidak dapat menghubungi server. Periksa koneksi internet Anda.</p>',
+                                confirmButtonText: '<i class="fas fa-redo"></i> Tutup',
+                                confirmButtonColor: '#dc2626',
+                                customClass: {
+                                    confirmButton: 'swal-button'
+                                }
+                            });
+                        }
+                        console.error('Delete error:', error);
+                    });
+                }
+            });
+        });
+    });
+});
+</script>
+
+<!-- CSS untuk SweetAlert Custom -->
+<style>
+    /* Custom styling untuk SweetAlert */
+    .swal-popup-custom {
+        border-radius: 12px;
+        padding: 20px;
+    }
+
+    .swal-button {
+        padding: 10px 24px !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        border-radius: 8px !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .swal-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .swal-button-confirm {
+        background-color: #dc2626 !important;
+        border: none !important;
+    }
+
+    .swal-button-confirm:hover {
+        background-color: #b91c1c !important;
+    }
+
+    .swal-button-cancel {
+        background-color: #6b7280 !important;
+        border: none !important;
+    }
+
+    .swal-button-cancel:hover {
+        background-color: #4b5563 !important;
+    }
+
+    /* Spinner loading */
+    .spinner-border {
+        display: inline-block;
+        width: 2rem;
+        height: 2rem;
+        border: 0.25em solid currentColor;
+        border-right-color: transparent;
+        border-radius: 50%;
+        animation: spinner-border 0.75s linear infinite;
+    }
+
+    @keyframes spinner-border {
+        to { transform: rotate(360deg); }
+    }
+</style>
+
+    <!-- Stack untuk scripts tambahan dari child views -->
+    @stack('scripts')
+
+</body>
+</html>
 
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
 

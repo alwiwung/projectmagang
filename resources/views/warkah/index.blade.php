@@ -197,39 +197,38 @@ use Illuminate\Support\Str;
                             </span>
                             @endif
                         </td>
-                        <td class="text-center px-4 py-3">
-                            <div class="flex justify-center gap-2">
-                                <a href="{{ route('warkah.show', $item->id) }}"
-                                    class="p-2 rounded-full text-blue-600 hover:bg-blue-100 transition"
-                                    title="Lihat Detail">
-                                    <i class="fa-solid fa-eye"></i>
-                                </a>
-                                <a href="{{ route('warkah.edit', $item->id) }}"
-                                    class="p-2 rounded-full text-green-600 hover:bg-green-100 transition"
-                                    title="Edit">
-                                    <i class="fa-solid fa-pencil"></i>
-                                </a>
-                                @if($item->status == 'Tersedia')
-                                <form action="{{ route('warkah.destroy', $item->id) }}" method="POST" class="inline"
-                                    onsubmit="return confirm('Apakah Anda yakin ingin menghapus data warkah ini?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                        class="p-2 rounded-full text-red-600 hover:bg-red-100 transition"
-                                        title="Hapus">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
-                                </form>
-                                @else
-                                <button type="button"
+                      <td class="text-center px-4 py-3">
+                        <div class="flex justify-center gap-2">
+                            <a href="{{ route('warkah.show', $item->id) }}"
+                                class="p-2 rounded-full text-blue-600 hover:bg-blue-100 transition"
+                                title="Lihat Detail">
+                                <i class="fa-solid fa-eye"></i>
+                            </a>
+                            <a href="{{ route('warkah.edit', $item->id) }}"
+                                class="p-2 rounded-full text-green-600 hover:bg-green-100 transition"
+                                title="Edit">
+                                <i class="fa-solid fa-pencil"></i>
+                            </a>
+                          @if($item->status == 'Tersedia')
+                            <button type="button"
+                                    class="btn-delete-warkah p-2 rounded-full text-red-600 hover:bg-red-100 transition"
+                                    data-id="{{ $item->id }}"
+                                    data-info="{{ $item->uraian_informasi_arsip }}"
+                                    data-status="{{ $item->status }}"
+                                    data-url="{{ route('warkah.destroy', $item->id) }}"
+                                    title="Hapus">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        @else
+                            <button type="button"
                                     class="p-2 rounded-full text-gray-400 cursor-not-allowed opacity-50"
-                                    title="Tidak dapat dihapus ({{ $item->status }})"
-                                    disabled>
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
-                                @endif
-                            </div>
-                        </td>
+                                    onclick="showStatusWarning('{{ $item->status }}')"
+                                    title="Tidak dapat dihapus ({{ $item->status }})">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        @endif
+                        </div>
+                    </td>
                     </tr>
                     @empty
                     <tr>
