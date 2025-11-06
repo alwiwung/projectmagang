@@ -53,11 +53,11 @@ class PeminjamanController extends Controller
 
         // 🔸 Urutkan: Terlambat > Dipinjam > Dikembalikan
         $peminjaman = $query
-            ->orderByRaw("CASE 
-                WHEN status = 'Terlambat' THEN 1 
-                WHEN status = 'Dipinjam' THEN 2 
-                WHEN status = 'Dikembalikan' THEN 3 
-                ELSE 4 
+            ->orderByRaw("CASE
+                WHEN status = 'Terlambat' THEN 1
+                WHEN status = 'Dipinjam' THEN 2
+                WHEN status = 'Dikembalikan' THEN 3
+                ELSE 4
             END")
             ->orderBy('created_at', 'desc')
             ->paginate(50);
@@ -66,7 +66,7 @@ class PeminjamanController extends Controller
         $totalDipinjam = PeminjamanWarkah::where('status', 'Dipinjam')->count();
         $totalTerlambat = PeminjamanWarkah::where('status', 'Terlambat')->count();
         $totalDikembalikan = PeminjamanWarkah::where('status', 'Dikembalikan')->count();
-        
+
         return view('peminjaman.index', compact(
             'peminjaman',
             'totalDipinjam',
@@ -80,9 +80,9 @@ class PeminjamanController extends Controller
     {
         $search = $request->get('search');
         $status = $request->get('status');
-        
+
         return Excel::download(
-            new PeminjamanExport($search, $status), 
+            new PeminjamanExport($search, $status),
             'Laporan_Peminjaman_' . date('Y-m-d_His') . '.xlsx'
         );
     }
@@ -113,7 +113,7 @@ class PeminjamanController extends Controller
         }
 
         $peminjaman = $query->orderBy('created_at', 'desc')->get();
-        
+
         $totalDipinjam = PeminjamanWarkah::where('status', 'Dipinjam')->count();
         $totalTerlambat = PeminjamanWarkah::where('status', 'Terlambat')->count();
         $totalDikembalikan = PeminjamanWarkah::where('status', 'Dikembalikan')->count();
@@ -126,7 +126,7 @@ class PeminjamanController extends Controller
         ));
 
         $pdf->setPaper('a4', 'landscape');
-        
+
         return $pdf->download('Laporan_Peminjaman_' . date('Y-m-d_His') . '.pdf');
     }
 
@@ -158,15 +158,15 @@ class PeminjamanController extends Controller
         $peminjaman = $query->orderBy('created_at', 'desc')->get();
 
         $filename = 'Laporan_Peminjaman_' . date('Y-m-d_His') . '.csv';
-        
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($peminjaman) {
+        $callback = function () use ($peminjaman) {
             $file = fopen('php://output', 'w');
-            
+
             // Header CSV
             fputcsv($file, [
                 'No',
@@ -239,22 +239,22 @@ class PeminjamanController extends Controller
 
         $validated['id_warkah'] = $request->id_warkah;
         $validated['file_nota_dinas'] = $fileNotaDinasPath;
-        
+
         $peminjaman = PeminjamanWarkah::create($validated);
         $warkah->update(['status' => 'Dipinjam']);
 
         // Format info untuk popup
         $info = sprintf(
-        "%s dipinjam oleh %s sampai %s",
-        $warkah->kode_klasifikasi,
-        $peminjaman->nama_peminjam,
-        \Carbon\Carbon::parse($peminjaman->batas_peminjaman)->format('d/m/Y')
-    );
+            "%s dipinjam oleh %s sampai %s",
+            $warkah->kode_klasifikasi,
+            $peminjaman->nama_peminjam,
+            \Carbon\Carbon::parse($peminjaman->batas_peminjaman)->format('d/m/Y')
+        );
 
-    return redirect()->route('peminjaman.index')
-        ->with('success_popup', $info)
-        ->with('popup_type', 'peminjaman_create');
-}
+        return redirect()->route('peminjaman.index')
+            ->with('success_popup', $info)
+            ->with('popup_type', 'peminjaman_create');
+    }
 
     /** 🔹 Tampilkan detail peminjaman */
     public function show($id)
@@ -298,16 +298,16 @@ class PeminjamanController extends Controller
         }
 
         $info = sprintf(
-        "%s dikembalikan oleh %s dalam kondisi %s",
-        $peminjaman->warkah->kode_klasifikasi ?? 'Warkah',
-        $peminjaman->nama_peminjam,
-        $validated['kondisi']
-    );
+            "%s dikembalikan oleh %s dalam kondisi %s",
+            $peminjaman->warkah->kode_klasifikasi ?? 'Warkah',
+            $peminjaman->nama_peminjam,
+            $validated['kondisi']
+        );
 
-    return redirect()->route('peminjaman.index')
-        ->with('success_popup', $info)
-        ->with('popup_type', 'peminjaman_return');
-}
+        return redirect()->route('peminjaman.index')
+            ->with('success_popup', $info)
+            ->with('popup_type', 'peminjaman_return');
+    }
     /** 🔹 Ambil data warkah yang masih tersedia */
     public function getAvailableWarkah(Request $request)
     {

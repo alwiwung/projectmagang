@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 class WarkahController extends Controller
 {
     /**
-     * Tampilkan daftar arsip 
+     * Tampilkan daftar arsip
      */
     public function index(Request $request)
     {
@@ -23,12 +23,20 @@ class WarkahController extends Controller
         $filters = $request->only(['kurun_waktu_berkas', 'ruang_penyimpanan_rak', 'kode_klasifikasi', 'status']);
         $showDeleted = $request->get('show_deleted', false);
 
+        // 🔧 Ambil nilai per_page dari request, default 15
+        $perPage = $request->get('per_page', 15);
+
+        // Validasi nilai per_page hanya boleh nilai yang diizinkan
+        $allowedPerPage = [10, 15, 25, 50, 100];
+        if (!in_array($perPage, $allowedPerPage)) {
+            $perPage = 15;
+        }
+
         $query = Warkah::query();
 
         if ($showDeleted) {
             $query->onlyTrashed();
         }
-
         // 🔍 Cek apakah ada pencarian
         if ($keyword) {
             if (str_starts_with($keyword, '#')) {
@@ -56,7 +64,7 @@ class WarkahController extends Controller
             $query->filter($filters);
         }
 
-        $warkah = $query->orderBy('created_at', 'desc')->paginate(15);
+        $warkah = $query->orderBy('created_at', 'desc')->paginate($perPage)->appends($request->except('page'));
 
         $tahunList = Warkah::select('kurun_waktu_berkas')
             ->distinct()
@@ -176,13 +184,13 @@ class WarkahController extends Controller
 
         $warkah->update($validated);
 
-         $info = sprintf(
-        "%s - %s",
-        $warkah->kode_klasifikasi,
-        $warkah->jenis_arsip_vital
-    );
+        $info = sprintf(
+            "%s - %s",
+            $warkah->kode_klasifikasi,
+            $warkah->jenis_arsip_vital
+        );
 
-       return redirect()->route('warkah.index')
+        return redirect()->route('warkah.index')
             ->with('success_popup', $info)
             ->with('popup_type', 'update');
     }
@@ -190,34 +198,34 @@ class WarkahController extends Controller
     /**
      * Hapus data warkah
      */
-  public function destroy(Warkah $warkah)
-{
-    // Validasi status
-    if ($warkah->status !== 'Tersedia') {
-        return response()->json([
-            'success' => false,
-            'message' => "Data tidak dapat dihapus karena berstatus '{$warkah->status}'."
-        ], 403);
-    }
+    public function destroy(Warkah $warkah)
+    {
+        // Validasi status
+        if ($warkah->status !== 'Tersedia') {
+            return response()->json([
+                'success' => false,
+                'message' => "Data tidak dapat dihapus karena berstatus '{$warkah->status}'."
+            ], 403);
+        }
 
-    try {
-        $info = $warkah->uraian_informasi_arsip;
-        $warkah->delete();
+        try {
+            $info = $warkah->uraian_informasi_arsip;
+            $warkah->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Data berhasil dihapus!',
-            'info' => $info
-        ]);
-    } catch (\Exception $e) {
-        \Log::error('Delete error: ' . $e->getMessage());
-        
-        return response()->json([
-            'success' => false,
-            'message' => 'Gagal menghapus data.'
-        ], 500);
+            return response()->json([
+                'success' => true,
+                'message' => 'Data berhasil dihapus!',
+                'info' => $info
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Delete error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus data.'
+            ], 500);
+        }
     }
-}
 
     public function export(Request $request)
     {
@@ -233,92 +241,100 @@ class WarkahController extends Controller
         return Excel::download(new WarkahExport($filters), $fileName);
     }
 
-public function import(Request $request)
-{
-    $request->validate([
-        'file' => 'required|mimes:xlsx,xls,csv',
-    ]);
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv',
+        ]);
 
-    try {
-        $file = $request->file('file');
-        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getRealPath());
-        $sheet = $spreadsheet->getActiveSheet();
-        $rows = $sheet->toArray(null, true, true, true);
+        try {
+            $file = $request->file('file');
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getRealPath());
+            $sheet = $spreadsheet->getActiveSheet();
+            $rows = $sheet->toArray(null, true, true, true);
 
-        // ⚠️ STEP 1: VALIDASI AWAL - CEK HEADER PEMINJAMAN DAN PERMINTAAN
-        $isPeminjamanFile = false;
-        $isPermintaanFile = false;
-        $detectedPeminjamanHeaders = [];
-        $detectedPermintaanHeaders = [];
-        
-        foreach ($rows as $row) {
-            $rowText = strtolower(implode(' ', array_map('trim', $row)));
-            
-            // Cek header peminjaman
-            if (str_contains($rowText, 'tanggal pinjam') || 
-                str_contains($rowText, 'tanggalpinjam') ||
-                str_contains($rowText, 'tujuan pinjam') || 
-                str_contains($rowText, 'tujuanpinjam') ||
-                str_contains($rowText, 'batas peminjaman') ||
-                str_contains($rowText, 'bataspeminjaman') ||
-                (str_contains($rowText, 'email') && str_contains($rowText, 'peminjam')) ||
-                (str_contains($rowText, 'no hp') && str_contains($rowText, 'peminjam')) ||
-                (str_contains($rowText, 'no. hp') && str_contains($rowText, 'peminjam'))) {
-                
-                $isPeminjamanFile = true;
-                
-                foreach ($row as $cell) {
-                    $cellLower = strtolower(trim($cell ?? ''));
-                    if (str_contains($cellLower, 'tanggal pinjam') || 
-                        str_contains($cellLower, 'tujuan pinjam') ||
-                        str_contains($cellLower, 'batas peminjaman') ||
-                        (str_contains($cellLower, 'email') && !str_contains($cellLower, 'kode')) ||
-                        (str_contains($cellLower, 'no hp') || str_contains($cellLower, 'no. hp'))) {
-                        $detectedPeminjamanHeaders[] = trim($cell);
+            // ⚠️ STEP 1: VALIDASI AWAL - CEK HEADER PEMINJAMAN DAN PERMINTAAN
+            $isPeminjamanFile = false;
+            $isPermintaanFile = false;
+            $detectedPeminjamanHeaders = [];
+            $detectedPermintaanHeaders = [];
+
+            foreach ($rows as $row) {
+                $rowText = strtolower(implode(' ', array_map('trim', $row)));
+
+                // Cek header peminjaman
+                if (
+                    str_contains($rowText, 'tanggal pinjam') ||
+                    str_contains($rowText, 'tanggalpinjam') ||
+                    str_contains($rowText, 'tujuan pinjam') ||
+                    str_contains($rowText, 'tujuanpinjam') ||
+                    str_contains($rowText, 'batas peminjaman') ||
+                    str_contains($rowText, 'bataspeminjaman') ||
+                    (str_contains($rowText, 'email') && str_contains($rowText, 'peminjam')) ||
+                    (str_contains($rowText, 'no hp') && str_contains($rowText, 'peminjam')) ||
+                    (str_contains($rowText, 'no. hp') && str_contains($rowText, 'peminjam'))
+                ) {
+
+                    $isPeminjamanFile = true;
+
+                    foreach ($row as $cell) {
+                        $cellLower = strtolower(trim($cell ?? ''));
+                        if (
+                            str_contains($cellLower, 'tanggal pinjam') ||
+                            str_contains($cellLower, 'tujuan pinjam') ||
+                            str_contains($cellLower, 'batas peminjaman') ||
+                            (str_contains($cellLower, 'email') && !str_contains($cellLower, 'kode')) ||
+                            (str_contains($cellLower, 'no hp') || str_contains($cellLower, 'no. hp'))
+                        ) {
+                            $detectedPeminjamanHeaders[] = trim($cell);
+                        }
                     }
+                    break;
                 }
-                break;
-            }
-            
-            // 🆕 CEK HEADER PERMINTAAN
-            if (str_contains($rowText, 'nama pemohon') || 
-                str_contains($rowText, 'namapemohon') ||
-                str_contains($rowText, 'nomor identitas') || 
-                str_contains($rowText, 'nomoridentitas') ||
-                str_contains($rowText, 'alamat lengkap') ||
-                str_contains($rowText, 'alamatlengkap') ||
-                str_contains($rowText, 'tanggal permintaan') ||
-                str_contains($rowText, 'tanggalpermintaan') ||
-                str_contains($rowText, 'jumlah salinan') ||
-                str_contains($rowText, 'jumlahsalinan') ||
-                (str_contains($rowText, 'instansi') && str_contains($rowText, 'pemohon'))) {
-                
-                $isPermintaanFile = true;
-                
-                foreach ($row as $cell) {
-                    $cellLower = strtolower(trim($cell ?? ''));
-                    if (str_contains($cellLower, 'nama pemohon') || 
-                        str_contains($cellLower, 'nomor identitas') ||
-                        str_contains($cellLower, 'alamat lengkap') ||
-                        str_contains($cellLower, 'tanggal permintaan') ||
-                        str_contains($cellLower, 'jumlah salinan') ||
-                        str_contains($cellLower, 'instansi') ||
-                        str_contains($cellLower, 'nomor telepon')) {
-                        $detectedPermintaanHeaders[] = trim($cell);
+
+                // 🆕 CEK HEADER PERMINTAAN
+                if (
+                    str_contains($rowText, 'nama pemohon') ||
+                    str_contains($rowText, 'namapemohon') ||
+                    str_contains($rowText, 'nomor identitas') ||
+                    str_contains($rowText, 'nomoridentitas') ||
+                    str_contains($rowText, 'alamat lengkap') ||
+                    str_contains($rowText, 'alamatlengkap') ||
+                    str_contains($rowText, 'tanggal permintaan') ||
+                    str_contains($rowText, 'tanggalpermintaan') ||
+                    str_contains($rowText, 'jumlah salinan') ||
+                    str_contains($rowText, 'jumlahsalinan') ||
+                    (str_contains($rowText, 'instansi') && str_contains($rowText, 'pemohon'))
+                ) {
+
+                    $isPermintaanFile = true;
+
+                    foreach ($row as $cell) {
+                        $cellLower = strtolower(trim($cell ?? ''));
+                        if (
+                            str_contains($cellLower, 'nama pemohon') ||
+                            str_contains($cellLower, 'nomor identitas') ||
+                            str_contains($cellLower, 'alamat lengkap') ||
+                            str_contains($cellLower, 'tanggal permintaan') ||
+                            str_contains($cellLower, 'jumlah salinan') ||
+                            str_contains($cellLower, 'instansi') ||
+                            str_contains($cellLower, 'nomor telepon')
+                        ) {
+                            $detectedPermintaanHeaders[] = trim($cell);
+                        }
                     }
+                    break;
                 }
-                break;
             }
-        }
-        
-        // 🚫 BLOKIR FILE PEMINJAMAN
-        if ($isPeminjamanFile) {
-            $headerList = !empty($detectedPeminjamanHeaders) 
-                ? implode(', ', array_unique($detectedPeminjamanHeaders)) 
-                : 'Header Peminjaman';
-                
-            return back()->withErrors([
-                'file' => '
+
+            // 🚫 BLOKIR FILE PEMINJAMAN
+            if ($isPeminjamanFile) {
+                $headerList = !empty($detectedPeminjamanHeaders)
+                    ? implode(', ', array_unique($detectedPeminjamanHeaders))
+                    : 'Header Peminjaman';
+
+                return back()->withErrors([
+                    'file' => '
                 <div style="padding: 20px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 8px;">
                     <div style="display: flex; align-items: center; margin-bottom: 16px;">
                         <svg style="width: 28px; height: 28px; color: #ff9800; margin-right: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20">
@@ -326,7 +342,7 @@ public function import(Request $request)
                         </svg>
                         <strong style="font-size: 18px; color: #856404;">❌ File Excel Ditolak</strong>
                     </div>
-                    
+
                     <div style="background: white; padding: 16px; border-radius: 6px; margin-bottom: 16px; border: 1px solid #ffeaa7;">
                         <p style="margin: 0 0 10px 0; color: #333; font-size: 15px; line-height: 1.6;">
                             File Excel yang Anda upload adalah <strong style="color: #d97706;">File Data Peminjaman</strong>, bukan File Data Warkah.
@@ -336,17 +352,17 @@ public function import(Request $request)
                         </p>
                     </div>
                 </div>'
-            ]);
-        }
-        
-        // 🚫 BLOKIR FILE PERMINTAAN
-        if ($isPermintaanFile) {
-            $headerList = !empty($detectedPermintaanHeaders) 
-                ? implode(', ', array_unique($detectedPermintaanHeaders)) 
-                : 'Header Permintaan';
-                
-            return back()->withErrors([
-                'file' => '
+                ]);
+            }
+
+            // 🚫 BLOKIR FILE PERMINTAAN
+            if ($isPermintaanFile) {
+                $headerList = !empty($detectedPermintaanHeaders)
+                    ? implode(', ', array_unique($detectedPermintaanHeaders))
+                    : 'Header Permintaan';
+
+                return back()->withErrors([
+                    'file' => '
                 <div style="padding: 20px; background: #fff3cd; border-left: 4px solid #ff9800; border-radius: 8px;">
                     <div style="display: flex; align-items: center; margin-bottom: 16px;">
                         <svg style="width: 28px; height: 28px; color: #ff6f00; margin-right: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20">
@@ -354,7 +370,7 @@ public function import(Request $request)
                         </svg>
                         <strong style="font-size: 18px; color: #856404;">❌ File Excel Ditolak</strong>
                     </div>
-                    
+
                     <div style="background: white; padding: 16px; border-radius: 6px; margin-bottom: 16px; border: 1px solid #ffeaa7;">
                         <p style="margin: 0 0 10px 0; color: #333; font-size: 15px; line-height: 1.6;">
                             File Excel yang Anda upload adalah <strong style="color: #e65100;">File Data Permintaan</strong>, bukan File Data Warkah.
@@ -364,22 +380,22 @@ public function import(Request $request)
                         </p>
                     </div>
                 </div>'
-            ]);
-        }
-
-        // 🧭 STEP 2: Lanjut deteksi header warkah (hanya jika bukan file peminjaman/permintaan)
-        $headerRowIndex = null;
-        foreach ($rows as $i => $row) {
-            $rowText = strtolower(implode(' ', $row));
-            if (str_contains($rowText, 'kode klasifikasi') || str_contains($rowText, 'uraian informasi arsip')) {
-                $headerRowIndex = $i;
-                break;
+                ]);
             }
-        }
 
-        if (!$headerRowIndex) {
-            return back()->withErrors([
-                'file' => '
+            // 🧭 STEP 2: Lanjut deteksi header warkah (hanya jika bukan file peminjaman/permintaan)
+            $headerRowIndex = null;
+            foreach ($rows as $i => $row) {
+                $rowText = strtolower(implode(' ', $row));
+                if (str_contains($rowText, 'kode klasifikasi') || str_contains($rowText, 'uraian informasi arsip')) {
+                    $headerRowIndex = $i;
+                    break;
+                }
+            }
+
+            if (!$headerRowIndex) {
+                return back()->withErrors([
+                    'file' => '
                 <div style="padding: 16px; background: #fee; border-left: 4px solid #dc3545; border-radius: 6px;">
                     <div style="display: flex; align-items: center; margin-bottom: 12px;">
                         <svg style="width: 24px; height: 24px; color: #dc3545; margin-right: 10px;" fill="currentColor" viewBox="0 0 20 20">
@@ -391,47 +407,47 @@ public function import(Request $request)
                         File Excel harus memiliki kolom Yang Sesuai Dengan Excel Warkah
                     </p>
                 </div>'
-            ]);
-        }
-
-        // 🧩 Gabungkan dua baris header
-        $headerRow = $rows[$headerRowIndex];
-        $nextRow = $rows[$headerRowIndex + 1] ?? [];
-
-        $mergedHeaderRow = [];
-        foreach ($headerRow as $col => $val) {
-            $top = trim($val ?? '');
-            $bottom = trim($nextRow[$col] ?? '');
-            
-            if (empty($bottom) || strtolower($top) === strtolower($bottom)) {
-                $merged = $top;
-            } else {
-                $merged = trim($top . ' ' . $bottom);
+                ]);
             }
-            
-            $mergedHeaderRow[$col] = $merged;
-        }
 
-        // 🔠 Normalisasi nama header
-        $headers = [];
-        foreach ($mergedHeaderRow as $key => $val) {
-            $normalized = strtolower(trim(preg_replace('/\s+/', ' ', $val ?? '')));
-            $headers[$key] = $this->mapHeaderName($normalized);
-        }
+            // 🧩 Gabungkan dua baris header
+            $headerRow = $rows[$headerRowIndex];
+            $nextRow = $rows[$headerRowIndex + 1] ?? [];
 
-        // ✅ Validasi header wajib
-        $requiredHeaders = ['kode_klasifikasi', 'uraian_informasi_arsip'];
-        $missing = [];
-        foreach ($requiredHeaders as $req) {
-            if (!in_array($req, $headers)) {
-                $missing[] = $req;
+            $mergedHeaderRow = [];
+            foreach ($headerRow as $col => $val) {
+                $top = trim($val ?? '');
+                $bottom = trim($nextRow[$col] ?? '');
+
+                if (empty($bottom) || strtolower($top) === strtolower($bottom)) {
+                    $merged = $top;
+                } else {
+                    $merged = trim($top . ' ' . $bottom);
+                }
+
+                $mergedHeaderRow[$col] = $merged;
             }
-        }
 
-        if (!empty($missing)) {
-            $detectedHeaders = implode(', ', array_unique($headers));
-            return back()->withErrors([
-                'file' => '
+            // 🔠 Normalisasi nama header
+            $headers = [];
+            foreach ($mergedHeaderRow as $key => $val) {
+                $normalized = strtolower(trim(preg_replace('/\s+/', ' ', $val ?? '')));
+                $headers[$key] = $this->mapHeaderName($normalized);
+            }
+
+            // ✅ Validasi header wajib
+            $requiredHeaders = ['kode_klasifikasi', 'uraian_informasi_arsip'];
+            $missing = [];
+            foreach ($requiredHeaders as $req) {
+                if (!in_array($req, $headers)) {
+                    $missing[] = $req;
+                }
+            }
+
+            if (!empty($missing)) {
+                $detectedHeaders = implode(', ', array_unique($headers));
+                return back()->withErrors([
+                    'file' => '
                 <div style="padding: 16px; background: #fee; border-left: 4px solid #dc3545; border-radius: 6px;">
                     <div style="display: flex; align-items: center; margin-bottom: 12px;">
                         <svg style="width: 24px; height: 24px; color: #dc3545; margin-right: 10px;" fill="currentColor" viewBox="0 0 20 20">
@@ -446,122 +462,124 @@ public function import(Request $request)
                         Header terdeteksi: <code style="background: #fff; padding: 2px 6px; border-radius: 3px;">' . $detectedHeaders . '</code>
                     </p>
                 </div>'
-            ]);
-        }
-
-        $inserted = 0;
-        $duplicates = 0;
-        $skipped = 0;
-        $errors = [];
-
-        // 🔁 Deteksi baris data pertama
-        $dataStartRow = $headerRowIndex + 1;
-        
-        for ($testRow = $headerRowIndex + 1; $testRow <= $headerRowIndex + 5; $testRow++) {
-            if (!isset($rows[$testRow])) continue;
-            
-            $testData = $rows[$testRow];
-            $testText = strtolower(implode(' ', $testData));
-            
-            if (str_contains($testText, 'kode klasifikasi') || 
-                str_contains($testText, 'uraian informasi') ||
-                str_contains($testText, 'jenis arsip') ||
-                str_contains($testText, 'nomor item')) {
-                continue;
+                ]);
             }
-            
-            $hasContent = false;
-            foreach ($testData as $cell) {
-                if (!empty(trim($cell ?? ''))) {
-                    $hasContent = true;
+
+            $inserted = 0;
+            $duplicates = 0;
+            $skipped = 0;
+            $errors = [];
+
+            // 🔁 Deteksi baris data pertama
+            $dataStartRow = $headerRowIndex + 1;
+
+            for ($testRow = $headerRowIndex + 1; $testRow <= $headerRowIndex + 5; $testRow++) {
+                if (!isset($rows[$testRow])) continue;
+
+                $testData = $rows[$testRow];
+                $testText = strtolower(implode(' ', $testData));
+
+                if (
+                    str_contains($testText, 'kode klasifikasi') ||
+                    str_contains($testText, 'uraian informasi') ||
+                    str_contains($testText, 'jenis arsip') ||
+                    str_contains($testText, 'nomor item')
+                ) {
+                    continue;
+                }
+
+                $hasContent = false;
+                foreach ($testData as $cell) {
+                    if (!empty(trim($cell ?? ''))) {
+                        $hasContent = true;
+                        break;
+                    }
+                }
+
+                if (!$hasContent) {
+                    continue;
+                }
+
+                $tempHeaders = [];
+                foreach ($headers as $col => $headerName) {
+                    $tempHeaders[$headerName] = trim($testData[$col] ?? '');
+                }
+
+                if (!empty($tempHeaders['kode_klasifikasi']) || !empty($tempHeaders['uraian_informasi_arsip'])) {
+                    $dataStartRow = $testRow;
                     break;
                 }
             }
-            
-            if (!$hasContent) {
-                continue;
-            }
-            
-            $tempHeaders = [];
-            foreach ($headers as $col => $headerName) {
-                $tempHeaders[$headerName] = trim($testData[$col] ?? '');
-            }
-            
-            if (!empty($tempHeaders['kode_klasifikasi']) || !empty($tempHeaders['uraian_informasi_arsip'])) {
-                $dataStartRow = $testRow;
-                break;
-            }
-        }
 
-        for ($i = $dataStartRow; $i <= count($rows); $i++) {
-            $row = $rows[$i] ?? [];
-            
-            $hasData = false;
-            foreach ($row as $cell) {
-                if (!empty(trim($cell ?? ''))) {
-                    $hasData = true;
-                    break;
+            for ($i = $dataStartRow; $i <= count($rows); $i++) {
+                $row = $rows[$i] ?? [];
+
+                $hasData = false;
+                foreach ($row as $cell) {
+                    if (!empty(trim($cell ?? ''))) {
+                        $hasData = true;
+                        break;
+                    }
                 }
-            }
-            
-            if (!$hasData) {
-                continue;
-            }
 
-            $data = [];
-            foreach ($headers as $col => $headerName) {
-                $value = $row[$col] ?? '';
-                $cleanValue = trim(preg_replace('/\s+/', ' ', $value));
-                
-                if ($cleanValue === '-') {
-                    $cleanValue = '';
+                if (!$hasData) {
+                    continue;
                 }
-                
-                $data[$headerName] = $cleanValue;
+
+                $data = [];
+                foreach ($headers as $col => $headerName) {
+                    $value = $row[$col] ?? '';
+                    $cleanValue = trim(preg_replace('/\s+/', ' ', $value));
+
+                    if ($cleanValue === '-') {
+                        $cleanValue = '';
+                    }
+
+                    $data[$headerName] = $cleanValue;
+                }
+
+                if (empty($data['kode_klasifikasi']) && empty($data['uraian_informasi_arsip'])) {
+                    $skipped++;
+                    $errors[] = "Baris {$i}: Data wajib kosong";
+                    continue;
+                }
+
+                // 🔍 Cek duplikat
+                $exists = Warkah::where('kode_klasifikasi', $data['kode_klasifikasi'] ?? null)
+                    ->where('uraian_informasi_arsip', $data['uraian_informasi_arsip'] ?? null)
+                    ->first();
+
+                if ($exists) {
+                    $duplicates++;
+                    continue;
+                }
+
+                // ✅ Simpan warkah baru - HANYA STATUS TERSEDIA
+                $warkah = Warkah::create([
+                    'kode_klasifikasi'        => $data['kode_klasifikasi'] ?? null,
+                    'jenis_arsip_vital'       => $data['jenis_arsip_vital'] ?? null,
+                    'nomor_item_arsip'        => $data['nomor_item_arsip'] ?? null,
+                    'lokasi'                  => $data['lokasi'] ?? null,
+                    'uraian_informasi_arsip'  => $data['uraian_informasi_arsip'] ?? null,
+                    'kurun_waktu_berkas'      => $data['kurun_waktu_berkas'] ?? null,
+                    'media'                   => $data['media'] ?? null,
+                    'jumlah'                  => $data['jumlah'] ?? null,
+                    'jangka_simpan_aktif'     => $data['jangka_simpan_aktif'] ?? null,
+                    'jangka_simpan_inaktif'   => $data['jangka_simpan_inaktif'] ?? null,
+                    'tingkat_perkembangan'    => $data['tingkat_perkembangan'] ?? null,
+                    'ruang_penyimpanan_rak'   => $data['ruang_penyimpanan_rak'] ?? null,
+                    'no_boks_definitif'       => $data['no_boks_definitif'] ?? null,
+                    'no_folder'               => $data['no_folder'] ?? null,
+                    'metode_perlindungan'     => $data['metode_perlindungan'] ?? null,
+                    'keterangan'              => $data['keterangan'] ?? null,
+                    'status'                  => 'Tersedia',
+                    'created_by'              => auth()->id(),
+                ]);
+
+                $inserted++;
             }
 
-            if (empty($data['kode_klasifikasi']) && empty($data['uraian_informasi_arsip'])) {
-                $skipped++;
-                $errors[] = "Baris {$i}: Data wajib kosong";
-                continue;
-            }
-
-            // 🔍 Cek duplikat
-            $exists = Warkah::where('kode_klasifikasi', $data['kode_klasifikasi'] ?? null)
-                ->where('uraian_informasi_arsip', $data['uraian_informasi_arsip'] ?? null)
-                ->first();
-
-            if ($exists) {
-                $duplicates++;
-                continue;
-            }
-
-            // ✅ Simpan warkah baru - HANYA STATUS TERSEDIA
-            $warkah = Warkah::create([
-                'kode_klasifikasi'        => $data['kode_klasifikasi'] ?? null,
-                'jenis_arsip_vital'       => $data['jenis_arsip_vital'] ?? null,
-                'nomor_item_arsip'        => $data['nomor_item_arsip'] ?? null,
-                'lokasi'                  => $data['lokasi'] ?? null,
-                'uraian_informasi_arsip'  => $data['uraian_informasi_arsip'] ?? null,
-                'kurun_waktu_berkas'      => $data['kurun_waktu_berkas'] ?? null,
-                'media'                   => $data['media'] ?? null,
-                'jumlah'                  => $data['jumlah'] ?? null,
-                'jangka_simpan_aktif'     => $data['jangka_simpan_aktif'] ?? null,
-                'jangka_simpan_inaktif'   => $data['jangka_simpan_inaktif'] ?? null,
-                'tingkat_perkembangan'    => $data['tingkat_perkembangan'] ?? null,
-                'ruang_penyimpanan_rak'   => $data['ruang_penyimpanan_rak'] ?? null,
-                'no_boks_definitif'       => $data['no_boks_definitif'] ?? null,
-                'no_folder'               => $data['no_folder'] ?? null,
-                'metode_perlindungan'     => $data['metode_perlindungan'] ?? null,
-                'keterangan'              => $data['keterangan'] ?? null,
-                'status'                  => 'Tersedia',
-                'created_by'              => auth()->id(),
-            ]);
-
-            $inserted++;
-        }
-
-        $message = "
+            $message = "
         <div style='padding: 20px; background: #d4edda; border-left: 4px solid #28a745; border-radius: 8px;'>
             <div style='display: flex; align-items: center; margin-bottom: 12px;'>
                 <svg style='width: 24px; height: 24px; color: #28a745; margin-right: 10px;' fill='currentColor' viewBox='0 0 20 20'>
@@ -569,7 +587,7 @@ public function import(Request $request)
                 </svg>
                 <strong style='font-size: 18px; color: #155724;'>Import Berhasil!</strong>
             </div>
-            
+
             <div style='background: white; padding: 14px; border-radius: 6px; margin-bottom: 12px;'>
                 <table style='width: 100%; font-size: 14px; color: #333;'>
                     <tr>
@@ -586,26 +604,25 @@ public function import(Request $request)
                     </tr>
                 </table>
             </div>
-            
+
             <p style='margin: 0; font-size: 13px; color: #155724;'>
                 <strong>Status:</strong> Semua data warkah baru diset sebagai <span style='background: #28a745; color: white; padding: 2px 8px; border-radius: 4px; font-weight: 600;'>Tersedia</span>
             </p>
         </div>";
 
-        if (!empty($errors) && $inserted === 0) {
-            $message .= "
+            if (!empty($errors) && $inserted === 0) {
+                $message .= "
                 <div style='margin-top:12px; padding: 14px; background: #f8d7da; border-left: 4px solid #dc3545; border-radius: 6px;'>
                     <strong style='color: #721c24;'>⚠️ Detail Error (5 baris pertama):</strong><br>
                     <small style='color: #721c24; font-size: 12px;'>" . implode('<br>', array_slice($errors, 0, 5)) . "</small>
                 </div>
             ";
-        }
+            }
 
-        return back()->with('success', $message);
-
-    } catch (\Exception $e) {
-        return back()->withErrors([
-            'file' => '
+            return back()->with('success', $message);
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'file' => '
             <div style="padding: 16px; background: #fee; border-left: 4px solid #dc3545; border-radius: 6px;">
                 <div style="display: flex; align-items: center; margin-bottom: 12px;">
                     <svg style="width: 24px; height: 24px; color: #dc3545; margin-right: 10px;" fill="currentColor" viewBox="0 0 20 20">
@@ -617,9 +634,9 @@ public function import(Request $request)
                     ' . $e->getMessage() . '
                 </p>
             </div>'
-        ]);
+            ]);
+        }
     }
-}
     /**
      * 🗺️ Mapping nama header yang fleksibel
      */
@@ -629,74 +646,74 @@ public function import(Request $request)
             'kode klasifikasi' => 'kode_klasifikasi',
             'kodeklasifikasi' => 'kode_klasifikasi',
             'kode' => 'kode_klasifikasi',
-            
+
             'uraian informasi arsip' => 'uraian_informasi_arsip',
             'uraianinformasiarsip' => 'uraian_informasi_arsip',
             'uraian informasi' => 'uraian_informasi_arsip',
             'uraian' => 'uraian_informasi_arsip',
             'informasi arsip' => 'uraian_informasi_arsip',
-            
+
             'jenis arsip vital' => 'jenis_arsip_vital',
             'jenisarsipvital' => 'jenis_arsip_vital',
             'jenis arsip' => 'jenis_arsip_vital',
-            
+
             'nomor item arsip' => 'nomor_item_arsip',
             'nomoritemarsip' => 'nomor_item_arsip',
             'nomor item' => 'nomor_item_arsip',
             'no item arsip' => 'nomor_item_arsip',
-            
+
             'ruangan' => 'lokasi',
             'lokasi' => 'lokasi',
             'lok' => 'lokasi',
-            
+
             'kurun waktu berkas' => 'kurun_waktu_berkas',
             'kurunwaktuberkas' => 'kurun_waktu_berkas',
             'kurun waktu' => 'kurun_waktu_berkas',
             'waktu berkas' => 'kurun_waktu_berkas',
-            
+
             'media' => 'media',
             'jumlah' => 'jumlah',
             'jml' => 'jumlah',
-            
+
             'jangka simpan aktif' => 'jangka_simpan_aktif',
             'jangkasimpanaktif' => 'jangka_simpan_aktif',
             'aktif' => 'jangka_simpan_aktif',
             'retensi aktif' => 'jangka_simpan_aktif',
-            
+
             'jangka simpan inaktif' => 'jangka_simpan_inaktif',
             'jangkasimpaninaktif' => 'jangka_simpan_inaktif',
             'inaktif' => 'jangka_simpan_inaktif',
             'retensi inaktif' => 'jangka_simpan_inaktif',
-            
+
             'tingkat perkembangan' => 'tingkat_perkembangan',
             'tingkatperkembangan' => 'tingkat_perkembangan',
-            
+
             'keterangan' => 'keterangan',
             'ket' => 'keterangan',
             'status' => 'status',
-            
+
             'metode perlindungan' => 'metode_perlindungan',
             'metodeperlindungan' => 'metode_perlindungan',
-            
+
             'nama peminjam' => 'nama_peminjam',
             'peminjam' => 'nama_peminjam',
             'namapeminjam' => 'nama_peminjam',
-            
+
             'nomor nota dinas' => 'nomor_nota_dinas',
             'no nota dinas' => 'nomor_nota_dinas',
             'nota dinas' => 'nomor_nota_dinas',
             'nomornotadinas' => 'nomor_nota_dinas',
-            
+
             'file nota dinas' => 'file_nota_dinas',
             'filenotadinas' => 'file_nota_dinas',
-            
+
             'ruang penyimpanan rak' => 'ruang_penyimpanan_rak',
             'ruang penyimpanan' => 'ruang_penyimpanan_rak',
             'ruangpenyimpanan' => 'ruang_penyimpanan_rak',
             'ruang rak' => 'ruang_penyimpanan_rak',
             'rak penyimpanan' => 'ruang_penyimpanan_rak',
             'penyimpanan rak' => 'ruang_penyimpanan_rak',
-            
+
             'no boks definitif' => 'no_boks_definitif',
             'noboksdefinitif' => 'no_boks_definitif',
             'nomor boks definitif' => 'no_boks_definitif',
@@ -705,7 +722,7 @@ public function import(Request $request)
             'boks definitif' => 'no_boks_definitif',
             'boks' => 'no_boks_definitif',
             'no box' => 'no_boks_definitif',
-            
+
             'no folder' => 'no_folder',
             'nofolder' => 'no_folder',
             'nomor folder' => 'no_folder',
@@ -715,20 +732,22 @@ public function import(Request $request)
         if (isset($mapping[$normalizedHeader])) {
             return $mapping[$normalizedHeader];
         }
-        
-        if (str_contains($normalizedHeader, 'ruang penyimpanan') || 
-            str_contains($normalizedHeader, 'penyimpanan rak')) {
+
+        if (
+            str_contains($normalizedHeader, 'ruang penyimpanan') ||
+            str_contains($normalizedHeader, 'penyimpanan rak')
+        ) {
             return 'ruang_penyimpanan_rak';
         }
-        
+
         if (str_contains($normalizedHeader, 'ruangan')) {
             return 'lokasi';
         }
-        
+
         if (str_contains($normalizedHeader, 'lokasi')) {
             return 'lokasi';
         }
-        
+
         foreach ($mapping as $key => $value) {
             if (str_contains($normalizedHeader, $key)) {
                 return $value;

@@ -61,9 +61,9 @@ class PermintaanController extends Controller
         $nama = $request->get('nama');
         $uraian = $request->get('uraian');
         $tanggalPermintaan = $request->get('tanggal_permintaan');
-        
+
         return Excel::download(
-            new PermintaanExport($nama, $uraian, $tanggalPermintaan), 
+            new PermintaanExport($nama, $uraian, $tanggalPermintaan),
             'Laporan_Permintaan_Salinan_' . date('Y-m-d_His') . '.xlsx'
         );
     }
@@ -178,43 +178,43 @@ class PermintaanController extends Controller
 
         // Format info untuk popup
         $info = sprintf(
-        "Permintaan salinan %s oleh %s (%d salinan)",
-        $warkah->kode_klasifikasi ?? 'Warkah',
-        $data['nama_pemohon'],
-        $data['jumlah_salinan']
-    );
+            "Permintaan salinan %s oleh %s (%d salinan)",
+            $warkah->kode_klasifikasi ?? 'Warkah',
+            $data['nama_pemohon'],
+            $data['jumlah_salinan']
+        );
 
-    return redirect()->route('permintaan.index')
-        ->with('success_popup', $info)
-        ->with('popup_type', 'permintaan_create');
-}
+        return redirect()->route('permintaan.index')
+            ->with('success_popup', $info)
+            ->with('popup_type', 'permintaan_create');
+    }
 
-   public function updateStatus(Request $request, $id)
-{
-    $request->validate([
-        'status_permintaan' => 'required|in:Diajukan,Diterima,Disposisi,Disalin,Selesai'
-    ]);
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status_permintaan' => 'required|in:Diajukan,Diterima,Disposisi,Disalin,Selesai'
+        ]);
 
-    $permintaan = Permintaan::with('warkah')->findOrFail($id);
-    $statusLama = $permintaan->status_permintaan;
-    $statusBaru = $request->status_permintaan;
-    
-    $permintaan->status_permintaan = $statusBaru;
-    $permintaan->save();
+        $permintaan = Permintaan::with('warkah')->findOrFail($id);
+        $statusLama = $permintaan->status_permintaan;
+        $statusBaru = $request->status_permintaan;
 
-    // Format info untuk popup
-    $info = sprintf(
-        "Status permintaan %s oleh %s: %s → %s",
-        $permintaan->warkah->kode_klasifikasi ?? 'Warkah',
-        $permintaan->nama_pemohon,
-        $statusLama,
-        $statusBaru
-    );
+        $permintaan->status_permintaan = $statusBaru;
+        $permintaan->save();
 
-    return redirect()->route('permintaan.index')
-        ->with('success_popup', $info)
-        ->with('popup_type', 'permintaan_status_update');
-}
+        // Format info untuk popup
+        $info = sprintf(
+            "Status permintaan %s oleh %s: %s → %s",
+            $permintaan->warkah->kode_klasifikasi ?? 'Warkah',
+            $permintaan->nama_pemohon,
+            $statusLama,
+            $statusBaru
+        );
+
+        return redirect()->route('permintaan.index')
+            ->with('success_popup', $info)
+            ->with('popup_type', 'permintaan_status_update');
+    }
 
 
     public function show($id)
