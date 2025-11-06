@@ -240,12 +240,21 @@ class PeminjamanController extends Controller
         $validated['id_warkah'] = $request->id_warkah;
         $validated['file_nota_dinas'] = $fileNotaDinasPath;
         
-        PeminjamanWarkah::create($validated);
+        $peminjaman = PeminjamanWarkah::create($validated);
         $warkah->update(['status' => 'Dipinjam']);
 
-        return redirect()->route('peminjaman.index')
-            ->with('success', 'Data peminjaman berhasil ditambahkan');
-    }
+        // Format info untuk popup
+        $info = sprintf(
+        "%s dipinjam oleh %s sampai %s",
+        $warkah->kode_klasifikasi,
+        $peminjaman->nama_peminjam,
+        \Carbon\Carbon::parse($peminjaman->batas_peminjaman)->format('d/m/Y')
+    );
+
+    return redirect()->route('peminjaman.index')
+        ->with('success_popup', $info)
+        ->with('popup_type', 'peminjaman_create');
+}
 
     /** 🔹 Tampilkan detail peminjaman */
     public function show($id)
@@ -288,9 +297,17 @@ class PeminjamanController extends Controller
             $peminjaman->warkah->update(['status' => $statusBaru]);
         }
 
-        return redirect()->back()->with('success', 'Warkah berhasil dikembalikan dan status telah diperbarui!');
-    }
+        $info = sprintf(
+        "%s dikembalikan oleh %s dalam kondisi %s",
+        $peminjaman->warkah->kode_klasifikasi ?? 'Warkah',
+        $peminjaman->nama_peminjam,
+        $validated['kondisi']
+    );
 
+    return redirect()->route('peminjaman.index')
+        ->with('success_popup', $info)
+        ->with('popup_type', 'peminjaman_return');
+}
     /** 🔹 Ambil data warkah yang masih tersedia */
     public function getAvailableWarkah(Request $request)
     {

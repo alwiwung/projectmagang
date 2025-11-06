@@ -16,9 +16,9 @@ use Illuminate\Support\Str;
     </div>
 
      <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
         <!-- Total Dipinjam -->
-        <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-all duration-300">
+        <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg p-4 md:p-6 text-white transform hover:scale-105 transition-all duration-300">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium opacity-90">Total Dipinjam</p>
@@ -159,8 +159,8 @@ use Illuminate\Support\Str;
     <!-- SEBELUM DATA TABLE -->
 
 
-    <!-- Data Table -->
-    <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-xl border border-gray-200 overflow-hidden transform transition-all duration-300 hover:shadow-2xl">
+   <!-- Data Table (Desktop Only) -->
+    <div class="hidden md:block bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-xl border border-gray-200 overflow-hidden transform transition-all duration-300 hover:shadow-2xl">
         <!-- Table Header -->
         <div class="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 px-6 py-4">
             <h2 class="text-lg font-bold text-white flex items-center">
@@ -940,7 +940,141 @@ use Illuminate\Support\Str;
 </div>
 
 
+<!-- Card Section (Mobile Only) -->
+<div class="md:hidden space-y-4">
+    @forelse($peminjaman as $item)
+    <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border-2 border-blue-200 p-4 transform transition-all duration-300 hover:shadow-xl">
+        {{-- Header Card --}}
+        <div class="flex justify-between items-start mb-3">
+            <div class="flex-1">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white font-bold text-xs shadow-md">
+                        {{ $peminjaman->firstItem() + $loop->index }}
+                    </span>
+                    <h3 class="font-bold text-gray-900 text-sm">{{ $item->warkah->kode_klasifikasi ?? '-' }}</h3>
+                </div>
+                <p class="text-xs text-gray-600 font-semibold">{{ Str::limit($item->nama_peminjam, 20) }}</p>
+            </div>
+            
+            @php
+            $statusPeminjamanConfig = [
+                'Dipinjam' => ['bg' => 'bg-yellow-100', 'text' => 'text-yellow-800', 'icon' => 'fa-clock'],
+                'Dikembalikan' => ['bg' => 'bg-green-100', 'text' => 'text-green-800', 'icon' => 'fa-check-circle'],
+                'Terlambat' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'icon' => 'fa-circle-exclamation'],
+            ];
+            $config = $statusPeminjamanConfig[$item->status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'icon' => 'fa-question'];
+            @endphp
+            
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-full {{ $config['bg'] }} {{ $config['text'] }} shadow-sm">
+                <i class="fa-solid {{ $config['icon'] }}"></i>
+                {{ $item->status }}
+            </span>
+        </div>
 
+        {{-- Divider --}}
+        <div class="border-t border-gray-200 my-3"></div>
+
+        {{-- Content --}}
+        <div class="space-y-2 mb-3">
+            {{-- Uraian Warkah --}}
+            <div class="flex items-start gap-2">
+                <i class="fa-solid fa-file-alt text-blue-600 mt-1 text-sm"></i>
+                <div class="flex-1">
+                    <p class="text-xs text-gray-500 font-medium">Uraian Warkah</p>
+                    <p class="text-sm text-gray-900 font-semibold line-clamp-2">
+                        {{ $item->warkah->uraian_informasi_arsip ?? '-' }}
+                    </p>
+                    @if($item->warkah && $item->warkah->ruang_penyimpanan_rak)
+                    <p class="text-xs text-gray-500 mt-1">
+                        <i class="fa-solid fa-location-dot mr-1"></i>
+                        {{ $item->warkah->ruang_penyimpanan_rak }}
+                    </p>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Info Grid --}}
+            <div class="grid grid-cols-2 gap-2 mt-3">
+                <div class="bg-blue-50 rounded-lg p-2">
+                    <p class="text-xs text-gray-500 font-medium mb-1">
+                        <i class="fa-solid fa-calendar-check mr-1"></i> Tgl Pinjam
+                    </p>
+                    <p class="text-xs font-bold text-gray-900">
+                        {{ $item->tanggal_pinjam->format('d M Y') }}
+                    </p>
+                </div>
+
+                <div class="bg-purple-50 rounded-lg p-2">
+                    <p class="text-xs text-gray-500 font-medium mb-1">
+                        <i class="fa-solid fa-calendar-xmark mr-1"></i> Batas Kembali
+                    </p>
+                    <p class="text-xs font-bold text-gray-900">
+                        {{ $item->batas_peminjaman->format('d M Y') }}
+                    </p>
+                </div>
+
+                <div class="bg-green-50 rounded-lg p-2">
+                    <p class="text-xs text-gray-500 font-medium mb-1">
+                        <i class="fa-solid fa-envelope mr-1"></i> Email
+                    </p>
+                    <p class="text-xs font-bold text-gray-900 truncate">
+                        {{ $item->email }}
+                    </p>
+                </div>
+
+                <div class="bg-amber-50 rounded-lg p-2">
+                    <p class="text-xs text-gray-500 font-medium mb-1">
+                        <i class="fa-solid fa-bullseye mr-1"></i> Tujuan
+                    </p>
+                    <p class="text-xs font-bold text-gray-900 truncate" title="{{ $item->tujuan_pinjam }}">
+                        {{ Str::limit($item->tujuan_pinjam, 15) }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        {{-- Actions --}}
+        <div class="flex gap-2 pt-3 border-t border-gray-200">
+            <a href="{{ route('peminjaman.show', $item->id) }}"
+                class="flex-1 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold rounded-lg text-center transition-all duration-200 shadow-sm text-sm">
+                <i class="fa-solid fa-eye mr-1"></i> Detail
+            </a>
+            
+            @if ($item->status != 'Dikembalikan')
+            <button
+                @click="$dispatch('open-modal-kembalikan', { 
+                    id: {{ $item->id }},
+                    tanggal_batas: '{{ \Carbon\Carbon::parse($item->tanggal_kembali)->format('Y-m-d') }}'
+                })"
+                class="flex-1 py-2.5 bg-green-50 hover:bg-green-100 text-green-600 font-semibold rounded-lg text-center transition-all duration-200 shadow-sm text-sm">
+                <i class="fa-solid fa-rotate-left mr-1"></i> Kembalikan
+            </button>
+            @endif
+        </div>
+    </div>
+    @empty
+    <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border-2 border-gray-200 p-8 text-center">
+        <div class="w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center mb-4 mx-auto shadow-lg">
+            <i class="fa-solid fa-inbox text-gray-400 text-4xl"></i>
+        </div>
+        <p class="text-gray-600 text-lg font-bold mb-2">Belum ada data peminjaman</p>
+        <p class="text-gray-400 text-sm mb-4">Klik tombol di bawah untuk memulai</p>
+        <button
+            @click="openModal = true"
+            class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold rounded-lg shadow-md transition-all duration-200">
+            <i class="fa-solid fa-plus mr-2"></i>
+            Tambah Peminjaman
+        </button>
+    </div>
+    @endforelse
+
+    {{-- Pagination Mobile --}}
+    @if($peminjaman->hasPages())
+    <div class="mt-4">
+        {{ $peminjaman->links() }}
+    </div>
+    @endif
+</div>
 
 
 

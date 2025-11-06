@@ -366,9 +366,9 @@
                         <div class="mt-6 pt-6 border-t border-gray-200">
                             <label class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4 block">Timeline Status</label>
                             <div class="space-y-3">
-                                @foreach(['Diajukan', 'Diterima', 'Disposisi', 'Disalin', 'Selesai'] as $status)
+                                @foreach(['Diajukan', 'Diterima',  'Disalin', 'Selesai'] as $status)
                                 @php
-                                $statusOrder = ['Diajukan' => 1, 'Diterima' => 2, 'Disposisi' => 3, 'Disalin' => 4, 'Selesai' => 5];
+                                $statusOrder = ['Diajukan' => 1, 'Diterima' => 2,  'Disalin' => 3, 'Selesai' => 4];
                                 $currentOrder = $statusOrder[$permintaan->status_permintaan] ?? 0;
                                 $thisOrder = $statusOrder[$status];
                                 $isActive = $thisOrder <= $currentOrder;

@@ -176,22 +176,46 @@ class PermintaanController extends Controller
             'status_permintaan' => $data['status'] ?? 'Diajukan',
         ]);
 
-        return redirect()->route('permintaan.index')
-            ->with('success', 'Permintaan salinan warkah berhasil disimpan.');
-    }
+        // Format info untuk popup
+        $info = sprintf(
+        "Permintaan salinan %s oleh %s (%d salinan)",
+        $warkah->kode_klasifikasi ?? 'Warkah',
+        $data['nama_pemohon'],
+        $data['jumlah_salinan']
+    );
 
-    public function updateStatus(Request $request, $id)
-    {
-        $request->validate([
-            'status_permintaan' => 'required|in:Diajukan,Diterima,Disposisi,Disalin,Selesai'
-        ]);
+    return redirect()->route('permintaan.index')
+        ->with('success_popup', $info)
+        ->with('popup_type', 'permintaan_create');
+}
 
-        $permintaan = Permintaan::findOrFail($id);
-        $permintaan->status_permintaan = $request->status_permintaan;
-        $permintaan->save();
+   public function updateStatus(Request $request, $id)
+{
+    $request->validate([
+        'status_permintaan' => 'required|in:Diajukan,Diterima,Disposisi,Disalin,Selesai'
+    ]);
 
-        return redirect()->back()->with('success', 'Status berhasil diperbarui!');
-    }
+    $permintaan = Permintaan::with('warkah')->findOrFail($id);
+    $statusLama = $permintaan->status_permintaan;
+    $statusBaru = $request->status_permintaan;
+    
+    $permintaan->status_permintaan = $statusBaru;
+    $permintaan->save();
+
+    // Format info untuk popup
+    $info = sprintf(
+        "Status permintaan %s oleh %s: %s → %s",
+        $permintaan->warkah->kode_klasifikasi ?? 'Warkah',
+        $permintaan->nama_pemohon,
+        $statusLama,
+        $statusBaru
+    );
+
+    return redirect()->route('permintaan.index')
+        ->with('success_popup', $info)
+        ->with('popup_type', 'permintaan_status_update');
+}
+
 
     public function show($id)
     {

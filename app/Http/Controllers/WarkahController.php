@@ -46,6 +46,7 @@ class WarkahController extends Controller
                     $q->whereRaw("REPLACE(REPLACE(kode_klasifikasi, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedKeyword}%"])
                         ->orWhereRaw("REPLACE(REPLACE(uraian_informasi_arsip, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedKeyword}%"])
                         ->orWhereRaw("REPLACE(REPLACE(nomor_item_arsip, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedKeyword}%"])
+                        ->orWhereRaw("REPLACE(REPLACE(lokasi, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedKeyword}%"])
                         ->orWhereRaw("REPLACE(REPLACE(jenis_arsip_vital, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedKeyword}%"]);
                 });
             }
@@ -124,9 +125,18 @@ class WarkahController extends Controller
             $validated['created_by'] = auth()->id();
         }
 
-        Warkah::create($validated);
+        $warkah = Warkah::create($validated);
 
-        return redirect()->route('warkah.index')->with('success', 'Data Warkah berhasil ditambahkan.');
+        // Format informasi warkah untuk ditampilkan di popup
+        $info = sprintf(
+            "%s - %s",
+            $warkah->kode_klasifikasi,
+            $warkah->jenis_arsip_vital
+        );
+
+        return redirect()->route('warkah.index')
+            ->with('success_popup', $info)
+            ->with('popup_type', 'create');
     }
 
     public function show(Warkah $warkah)
@@ -166,7 +176,15 @@ class WarkahController extends Controller
 
         $warkah->update($validated);
 
-        return redirect()->route('warkah.index')->with('success', 'Data arsip berhasil diperbarui.');
+         $info = sprintf(
+        "%s - %s",
+        $warkah->kode_klasifikasi,
+        $warkah->jenis_arsip_vital
+    );
+
+       return redirect()->route('warkah.index')
+            ->with('success_popup', $info)
+            ->with('popup_type', 'update');
     }
 
     /**
