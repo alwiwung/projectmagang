@@ -12,17 +12,16 @@ use App\Http\Controllers\Auth\LoginController;
 |--------------------------------------------------------------------------
 */
 
-// Redirect root ke welcome blade
+// Redirect root ke halaman welcome
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-// Route /home (alias untuk root)
+// Alias untuk root
 Route::get('/home', function () {
-    if (auth()->check()) {
-        return redirect()->route('warkah.index');
-    }
-    return redirect()->route('login');
+    return auth()->check()
+        ? redirect()->route('warkah.index')
+        : redirect()->route('login');
 });
 
 // Authentication Routes
@@ -30,30 +29,28 @@ Route::middleware('guest')->group(function () {
     // Login
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login']);
-    
-    // Register (jika sudah ada controller register)
+
+    // Placeholder routes untuk register & password reset (jika diperlukan)
     // Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
     // Route::post('/register', [RegisterController::class, 'register']);
-    
-    // Password Reset (jika sudah ada)
     // Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
     // Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
 });
 
-// Logout (perlu login)
-Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
+// Logout (hanya untuk user login)
+Route::post('/logout', [LoginController::class, 'logout'])
+    ->middleware('auth')
+    ->name('logout');
 
 /*
 |--------------------------------------------------------------------------
 | Protected Routes (Perlu Login)
 |--------------------------------------------------------------------------
 */
-
 Route::middleware('auth')->group(function () {
-    
     /*
     |--------------------------------------------------------------------------
-    | Dashboard (optional)
+    | Dashboard
     |--------------------------------------------------------------------------
     */
     Route::get('/dashboard', function () {
@@ -90,6 +87,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}', [PeminjamanController::class, 'show'])->name('show');
         Route::post('/{id}/kembalikan', [PeminjamanController::class, 'kembalikan'])->name('kembalikan');
         Route::get('/api/available-warkah', [PeminjamanController::class, 'getAvailableWarkah'])->name('api.available-warkah');
+        Route::get('/{id}/whatsapp-message', [PeminjamanController::class, 'generateWhatsAppMessage'])->name('whatsapp-message');
     });
 
     /*
@@ -102,9 +100,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/create', [PermintaanController::class, 'create'])->name('create');
         Route::post('/', [PermintaanController::class, 'store'])->name('store');
 
+        // Dokumen & Cetak
+        Route::post('/{id}/dokumen', [PermintaanController::class, 'updateDokumen'])->name('updateDokumen');
+        Route::get('/{id}/cetak', [PermintaanController::class, 'cetakPDF'])->name('cetak');
+        Route::patch('/{id}/update-status', [PermintaanController::class, 'updateStatus'])->name('updateStatus');
+
         // File routes
         Route::get('/{id}/file/{type}', [PermintaanController::class, 'lihatFile'])->name('lihatFile');
         Route::get('/{id}/download/{type}', [PermintaanController::class, 'downloadFile'])->name('downloadFile');
+
+        // File content (tampilkan file di browser)
         Route::get('/{id}/file-content/{type}', function ($id, $type) {
             $permintaan = \App\Models\Permintaan::findOrFail($id);
 
@@ -131,12 +136,7 @@ Route::middleware('auth')->group(function () {
             ]);
         })->name('getFileContent');
 
-        // Document routes
-        Route::post('/{id}/dokumen', [PermintaanController::class, 'updateDokumen'])->name('updateDokumen');
-        Route::get('/{id}/cetak', [PermintaanController::class, 'cetakPDF'])->name('cetak');
-        Route::patch('/{id}/update-status', [PermintaanController::class, 'updateStatus'])->name('updateStatus');
-
-        // Show dan delete di bagian bawah supaya tidak konflik dengan rute file
+        // Show & Delete
         Route::get('/{id}', [PermintaanController::class, 'show'])->name('show');
         Route::delete('/{id}', [PermintaanController::class, 'destroy'])->name('destroy');
     });
@@ -148,6 +148,5 @@ Route::middleware('auth')->group(function () {
     */
     Route::get('/api/warkah/search', [PermintaanController::class, 'searchWarkah'])->name('warkah.search');
     Route::get('/warkah/{id}', [PermintaanController::class, 'getWarkahDetail'])->name('warkah.detail');
-    
 
 });

@@ -18,7 +18,9 @@ class OverdueReminderMail extends Mailable
     public function __construct(PeminjamanWarkah $peminjaman)
     {
         $this->peminjaman = $peminjaman;
-        $this->daysOverdue = Carbon::parse($peminjaman->batas_peminjaman)->diffInDays(Carbon::today());
+        // Hitung hari keterlambatan
+        $this->daysOverdue = Carbon::parse($peminjaman->batas_peminjaman)
+            ->diffInDays(Carbon::today());
     }
 
     public function build()
@@ -26,9 +28,13 @@ class OverdueReminderMail extends Mailable
         return $this->subject('⚠️ Pengingat: Keterlambatan Pengembalian Warkah')
             ->view('emails.overdue-reminder')
             ->with([
-                'peminjaman' => $this->peminjaman,
-                'daysOverdue' => $this->daysOverdue,
-                'warkah' => $this->peminjaman->warkah
+                'nama' => $this->peminjaman->nama_lengkap,
+                'kode_warkah' => $this->peminjaman->warkah->kode_warkah ?? 'N/A',
+                'batas_pengembalian' => Carbon::parse($this->peminjaman->batas_peminjaman)
+                    ->format('d F Y'),
+                'hari_terlambat' => $this->daysOverdue,
+                'tanggal_pinjam' => Carbon::parse($this->peminjaman->tanggal_pinjam)
+                    ->format('d F Y'),
             ]);
     }
 }

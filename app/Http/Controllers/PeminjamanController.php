@@ -30,10 +30,10 @@ class PeminjamanController extends Controller
         // 🔸 Filter pencarian dengan normalisasi
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
-            
+
             // ✨ Normalisasi keyword dengan menghapus spasi
             $normalizedSearch = preg_replace('/\s+/', '', $search);
-            
+
             $query->where(function ($q) use ($search, $normalizedSearch) {
                 // Pencarian biasa tanpa normalisasi untuk nama, email, no_hp
                 $q->where('nama_peminjam', 'like', '%' . $search . '%')
@@ -62,37 +62,57 @@ class PeminjamanController extends Controller
                 ELSE 4 
             END")
             ->orderBy('created_at', 'desc')
-            ->paginate(10);
-
-        return view('peminjaman.index', compact('peminjaman'));
+            ->paginate(50);
+        // Statistik untuk card
+        $totalDipinjam = PeminjamanWarkah::where('status', 'Dipinjam')->count();
+        $totalTerlambat = PeminjamanWarkah::where('status', 'Terlambat')->count();
+        $totalDikembalikan = PeminjamanWarkah::where('status', 'Dikembalikan')->count();
+        return view('peminjaman.index', compact(
+            'peminjaman',
+            'totalDipinjam',      // ← TAMBAHKAN INI
+            'totalTerlambat',     // ← TAMBAHKAN INI
+            'totalDikembalikan'   // ← TAMBAHKAN INI
+        ));
     }
 
     /** 🔹 Simpan data peminjaman baru */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'nama_peminjam' => 'required|string|max:255',
-            'no_hp' => 'required|string|max:20',
-            'email' => 'required|email|max:255',
-            'tanggal_pinjam' => 'required|date',
-            'tujuan_pinjam' => 'required|string',
-            'batas_peminjaman' => 'required|date|after:tanggal_pinjam',
-        ]);
+   /** 🔹 Simpan data peminjaman baru */
+            /** 🔹 Simpan data peminjaman baru */
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'nama_peminjam' => 'required|string|max:255',
+        'no_hp' => 'required|string|max:20',
+        'email' => 'required|email|max:255',
+        'tanggal_pinjam' => 'required|date',
+        'tujuan_pinjam' => 'required|string',
+        'batas_peminjaman' => 'required|date',
+        'nomor_nota_dinas' => 'required|string|max:255',
+        'file_nota_dinas' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+        'uraian' => 'nullable|string|max:1000',  // Sesuai nama kolom di DB
+    ]);
 
-        $warkah = Warkah::find($request->id_warkah);
+    $warkah = Warkah::find($request->id_warkah);
 
-        if ($warkah->isDipinjam()) {
-            return back()->withErrors(['id_warkah' => 'Warkah ini sedang dipinjam oleh orang lain']);
-        }
-        
-        $validated['id_warkah'] = $request->id_warkah;
-        PeminjamanWarkah::create($validated);
-        $warkah->update(['status' => 'Dipinjam']);
-
-        return redirect()->route('peminjaman.index')
-            ->with('success', 'Data peminjaman berhasil ditambahkan');
+    if ($warkah->isDipinjam()) {
+        return back()->withErrors(['id_warkah' => 'Warkah ini sedang dipinjam oleh orang lain']);
     }
 
+    // 🔸 Upload file nota dinas
+    $fileNotaDinasPath = null;
+    if ($request->hasFile('file_nota_dinas')) {
+        $fileNotaDinasPath = $request->file('file_nota_dinas')->store('nota_dinas', 'public');
+    }
+
+    $validated['id_warkah'] = $request->id_warkah;
+    $validated['file_nota_dinas'] = $fileNotaDinasPath;
+    
+    PeminjamanWarkah::create($validated);
+    $warkah->update(['status' => 'Dipinjam']);
+
+    return redirect()->route('peminjaman.index')
+        ->with('success', 'Data peminjaman berhasil ditambahkan');
+}
     /** 🔹 Tampilkan detail peminjaman (halaman show) */
     public function show($id)
     {
@@ -149,20 +169,20 @@ class PeminjamanController extends Controller
         // Ambil hanya warkah yang statusnya benar-benar "Tersedia"
         $query = Warkah::where('status', 'Tersedia');
 
-    // Tambahkan filter pencarian jika ada input
-    if ($search) {
-        $query->where(function ($q) use ($search) {
-            $q->where('id', 'LIKE', "%{$search}%")
-                ->orWhere('kode_klasifikasi', 'LIKE', "%{$search}%")
-                ->orWhere('uraian_informasi_arsip', 'LIKE', "%{$search}%")
-                ->orWhere('ruang_penyimpanan_rak', 'LIKE', "%{$search}%")
-                ->orWhere('nomor_item_arsip', 'LIKE', "%{$search}%")
-                ->orWhere('kurun_waktu_berkas', 'LIKE', "%{$search}%")
-                ->orWhere('lokasi', 'LIKE', "%{$search}%")
-                ->orWhere('no_boks_definitif', 'LIKE', "%{$search}%")
-                ->orWhere('no_folder', 'LIKE', "%{$search}%");
-        });
-    }
+        // Tambahkan filter pencarian jika ada input
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('id', 'LIKE', "%{$search}%")
+                    ->orWhere('kode_klasifikasi', 'LIKE', "%{$search}%")
+                    ->orWhere('uraian_informasi_arsip', 'LIKE', "%{$search}%")
+                    ->orWhere('ruang_penyimpanan_rak', 'LIKE', "%{$search}%")
+                    ->orWhere('nomor_item_arsip', 'LIKE', "%{$search}%")
+                    ->orWhere('kurun_waktu_berkas', 'LIKE', "%{$search}%")
+                    ->orWhere('lokasi', 'LIKE', "%{$search}%")
+                    ->orWhere('no_boks_definitif', 'LIKE', "%{$search}%")
+                    ->orWhere('no_folder', 'LIKE', "%{$search}%");
+            });
+        }
 
         $warkah = $query->select(
             'id',

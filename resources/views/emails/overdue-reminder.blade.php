@@ -122,11 +122,11 @@
             <table class="info-table">
                 <tr>
                     <td>🔖 Kode Warkah</td>
-                    <td><strong>{{ $warkah->kode_klasifikasi ?? '-' }}</strong></td>
+                    <td><strong>{{ $peminjaman->warkah->kode_klasifikasi ?? '-' }}</strong></td>
                 </tr>
                 <tr>
                     <td>📄 Uraian Informasi</td>
-                    <td>{{ $warkah->uraian_informasi_arsip ?? '-' }}</td>
+                    <td>{{ $peminjaman->warkah->uraian_informasi_arsip ?? '-' }}</td>
                 </tr>
                 <tr>
                     <td>📅 Tanggal Pinjam</td>

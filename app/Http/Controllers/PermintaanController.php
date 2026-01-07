@@ -28,11 +28,11 @@ class PermintaanController extends Controller
             $uraian = $request->uraian;
             // ✨ Normalisasi keyword dengan menghapus spasi
             $normalizedUraian = preg_replace('/\s+/', '', $uraian);
-            
+
             $query->whereHas('warkah', function ($q) use ($normalizedUraian) {
                 $q->whereRaw("REPLACE(REPLACE(uraian_informasi_arsip, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedUraian}%"])
-                  ->orWhereRaw("REPLACE(REPLACE(kode_klasifikasi, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedUraian}%"])
-                  ->orWhereRaw("REPLACE(REPLACE(nomor_item_arsip, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedUraian}%"]);
+                    ->orWhereRaw("REPLACE(REPLACE(kode_klasifikasi, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedUraian}%"])
+                    ->orWhereRaw("REPLACE(REPLACE(nomor_item_arsip, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedUraian}%"]);
             });
         }
 
@@ -54,10 +54,14 @@ class PermintaanController extends Controller
 
     /**
      * Form tambah permintaan baru
+     * 🚫 Hanya tampilkan warkah dengan status selain Dipinjam dan Terlambat
      */
     public function create()
     {
-        $warkah = Warkah::orderBy('uraian_informasi_arsip', 'asc')->get();
+        $warkah = Warkah::whereNotIn('status', ['Dipinjam', 'Terlambat'])
+            ->orderBy('uraian_informasi_arsip', 'asc')
+            ->get();
+
         return view('permintaan.create', compact('warkah'));
     }
 
@@ -84,7 +88,7 @@ class PermintaanController extends Controller
                 'nullable',
                 'file',
                 'max:4096',
-                'mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/octet-stream,application/zip', 
+                'mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/octet-stream,application/zip',
             ],
 
             'nomor_surat_disposisi' => 'nullable|string|max:100',
@@ -98,6 +102,14 @@ class PermintaanController extends Controller
 
             'status' => 'required|in:Diajukan,Diterima,Disposisi,Disalin,Selesai',
         ]);
+
+        // 🚫 Validasi tambahan: Pastikan warkah tidak berstatus Dipinjam atau Terlambat
+        $warkah = Warkah::find($data['id_warkah']);
+        if (in_array($warkah->status, ['Dipinjam', 'Terlambat'])) {
+            return back()->withErrors([
+                'id_warkah' => 'Warkah yang dipilih sedang tidak tersedia (status: ' . $warkah->status . '). Silakan pilih warkah lain.'
+            ])->withInput();
+        }
 
         // ✅ Fallback tambahan jika PHP salah deteksi MIME (file .docx terbaca .bin)
         $allowedExt = ['pdf', 'doc', 'docx'];
@@ -195,7 +207,7 @@ class PermintaanController extends Controller
         }
 
         $path = storage_path('app/public/' . $filePath);
-        
+
         if (!file_exists($path)) {
             abort(404, 'File tidak ditemukan di server');
         }
@@ -228,7 +240,7 @@ class PermintaanController extends Controller
     public function downloadFile($id, $type)
     {
         $permintaan = Permintaan::findOrFail($id);
-        
+
         // Tentukan file mana yang akan didownload
         if ($type === 'nota') {
             $fileColumn = $permintaan->nota_dinas_masuk_file;
@@ -237,27 +249,30 @@ class PermintaanController extends Controller
         } else {
             abort(404, 'Tipe file tidak ditemukan');
         }
-        
+
         // Cek apakah file ada di database
         if (empty($fileColumn)) {
             return back()->with('error', 'File tidak ditemukan untuk permintaan ini');
         }
-        
+
         // Cek apakah file ada di storage
         if (!Storage::disk('public')->exists($fileColumn)) {
             return back()->with('error', 'File tidak ditemukan di server');
         }
-        
-        $filePath = Storage::disk('public')->path($fileColumn);
+
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $storage */
+        $storage = Storage::disk('public');
+
+        $filePath = $storage->path($fileColumn);
         $fileName = basename($fileColumn);
-        
+
         // Force download dengan headers
         return response()->download($filePath, $fileName, [
-            'Content-Type' => Storage::disk('public')->mimeType($fileColumn),
+            'Content-Type' => $storage->mimeType($fileColumn),
             'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
         ]);
     }
-    
+
     public function destroy($id)
     {
         $permintaan = Permintaan::findOrFail($id);
@@ -270,25 +285,26 @@ class PermintaanController extends Controller
     {
         // Hanya load relasi warkah
         $permintaan = Permintaan::with(['warkah'])->findOrFail($id);
-        
+
         return view('permintaan.cetak', compact('permintaan'));
     }
 
     /**
      * 🔹 Ambil data warkah untuk dropdown Select2 (dengan normalisasi pencarian)
+     * 🚫 Hanya tampilkan warkah dengan status selain Dipinjam dan Terlambat
      */
     public function getAvailableWarkah(Request $request)
     {
         $search = $request->get('search', '');
 
-        // Ambil semua warkah (tidak ada filter status khusus untuk permintaan salinan)
-        $query = Warkah::query();
+        // 🚫 Filter warkah: hanya yang BUKAN berstatus Dipinjam atau Terlambat
+        $query = Warkah::whereNotIn('status', ['Dipinjam', 'Terlambat']);
 
         // ✨ Tambahkan filter pencarian dengan normalisasi jika ada input
         if ($search) {
             // Normalisasi keyword dengan menghapus spasi
             $normalizedSearch = preg_replace('/\s+/', '', $search);
-            
+
             $query->where(function ($q) use ($normalizedSearch) {
                 $q->whereRaw("REPLACE(REPLACE(kode_klasifikasi, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedSearch}%"])
                     ->orWhereRaw("REPLACE(REPLACE(uraian_informasi_arsip, ' ', ''), '\n', '') LIKE ?", ["%{$normalizedSearch}%"])

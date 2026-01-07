@@ -21,10 +21,14 @@ class PeminjamanWarkah extends Model
         'tujuan_pinjam',
         'batas_peminjaman',
         'status',
+          // ✅ Tambahan baru
+        'nomor_nota_dinas',
+        'file_nota_dinas',
+        'uraian',
         'tanggal_kembali',
          'kondisi',       // ✅ tambahkan ini
         'bukti',         // ✅ tambahkan ini
-        'catatan'
+        'catatan',
     ];
 
     protected $casts = [

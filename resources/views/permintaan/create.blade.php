@@ -372,7 +372,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">
-                                📝 Catatan Tambahan
+                                📝 Uraian
                             </label>
                             <textarea name="catatan_tambahan" rows="3" placeholder="Tambahkan catatan jika diperlukan..."
                                 class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all resize-none">{{ old('catatan_tambahan') }}</textarea>
@@ -423,7 +423,7 @@
                             </div>
                         </div>
 
-                        {{-- Surat Disposisi --}}
+                        {{-- Surat Disposisi
                         <div class="p-5 bg-white rounded-lg border border-orange-300">
                             <h4 class="font-semibold text-gray-700 mb-4 flex items-center">
                                 <svg class="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -457,7 +457,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> --}}
 
                     {{-- Section 5: Status --}}
                     <div class="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl p-6 border border-indigo-200">
